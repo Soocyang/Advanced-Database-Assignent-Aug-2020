@@ -36,3 +36,27 @@ Execute the file
 ```
 SQL > start {file_path/drag n drop here}
 ```
+
+
+## Queries
+
+### Brendan Chew Jian Wen (Restaurant/Orders)
+1. Sales from which location Highest(Top 5) --> Compare by Years/Month
+2. Sales from which Restaurant Compare by month
+3. Total Orders Group by Payment Method (summary rpt) by Month
+
+### Chia Wei Xiang (Promotion/Customers)
+1. Promotion Code Used Count(*)
+2. Promotion link to order compare over years/month
+3. Customers with highest orders by location by month
+
+### Cheah Poh Reng (Reviews/Menu)
+1. Reviews with Reorder(True?) Total Reorder
+2. Review Rating by Orders by Restaurant by Compare Years
+3. Menu (Category) Most Orders (Top 10 menu) by restaurant by month/ weeks
+
+### Soo Cia Yang (Riders)
+1. Rider Performance - Total Orders Delivered Comparison by Years
+2. Rider Performance - Toal Orders Delivered By Month - Details
+3. Rider Performance - Average time taken to delivered orders
+
