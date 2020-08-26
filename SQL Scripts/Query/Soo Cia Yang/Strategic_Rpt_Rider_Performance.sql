@@ -1,3 +1,19 @@
+-- NEED CREATE THIS VIEW FIRST
+-- TO GET ALL TOTAL ORDERS DELIVERED FROM ALL RECORDS BY YEARS
+-- ===========================================================
+
+-- CREATE OR REPLACE VIEW views_total_orders_delivered_by_year AS
+--       SELECT r.riderId, r.riderName, EXTRACT(YEAR FROM o.orderDate) year, count(o.orderId) Total_Orders_Delivered_By_Year
+--       FROM orders o, riders r
+--       WHERE o.riderId = r.riderId
+--       GROUP BY r.riderId, r.riderName, EXTRACT(YEAR FROM o.orderDate)
+--       ORDER BY r.riderId, year;
+
+-- select * from views_total_orders_delivered_by_year;
+
+-- ===========================================================
+
+
 -- =========================================================================
 --   RIDERS PERFORMANCE REPORT - TOTAL ORDERS DELIVERED BY COMPARING YEARS
 -- =========================================================================
@@ -46,3 +62,5 @@ COLUMN Year_3 CLEAR
 TTITLE OFF
 
 SPOOL OFF
+
+
