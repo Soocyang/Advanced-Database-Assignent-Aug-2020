@@ -17,7 +17,9 @@
 -- =========================================================================
 --   RIDERS PERFORMANCE REPORT - TOTAL ORDERS DELIVERED BY COMPARING YEARS
 -- =========================================================================
-SPOOL 'D:\RIDERS_PERFORMANCE_REPORT_2.txt'
+
+
+-- SPOOL 'D:\RIDERS_PERFORMANCE_REPORT_2.txt'
 
 ACCEPT v_Year1   DATE   FORMAT 'YYYY'   PROMPT 'Enter value 1st Year format(YYYY): '
 ACCEPT v_Year2   DATE   FORMAT 'YYYY'   PROMPT 'Enter value 2nd Year format(YYYY): '
@@ -61,6 +63,6 @@ COLUMN Year_2 CLEAR
 COLUMN Year_3 CLEAR
 TTITLE OFF
 
-SPOOL OFF
+-- SPOOL OFF
 
 

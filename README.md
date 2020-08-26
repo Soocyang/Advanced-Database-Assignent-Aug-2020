@@ -46,8 +46,8 @@ SQL > start {file_path/drag n drop here}
 3. Total Orders Group by Payment Method (summary rpt) by Month
 
 ### Chia Wei Xiang (Promotion/Customers)
-1. Promotion Code Used Count(*)
-2. Promotion link to order compare over years/month
+1. Promotion Code Used Count(*) compare over month
+2. Order + Promotion Promotion By (Sales) link to order compare over month 
 3. Customers with highest orders by location by month
 
 ### Cheah Poh Reng (Reviews/Menu)
@@ -60,3 +60,33 @@ SQL > start {file_path/drag n drop here}
 2. Rider Performance - Toal Orders Delivered By Month - Details
 3. Rider Performance - Average time taken to delivered orders
 
+## Triggers
+1. 
+2. 
+
+1. 
+2. 
+
+1. 
+2. 
+
+1. 
+2. 
+
+
+- Sum automatically the subtotal with the delivery fees
+- Check Promo Code/ Expiry date
+- OrderList --> PriceEach Auto Update
+
+## Procedures
+1. 
+2. 
+
+1. 
+2. 
+
+1. 
+2. 
+
+1. 
+2. 
