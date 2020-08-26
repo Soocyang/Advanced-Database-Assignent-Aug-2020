@@ -45,10 +45,18 @@ COLUMN orderDate CLEAR
 COLUMN estimatedTime CLEAR
 COLUMN receivedTime CLEAR
 CLEAR BREAKS;
+TTITLE OFF
 
 -- Logic
 
 -- ADD LOCATION
 
+
+
+-- TEST DATA
+
+-- rider id : 1001
+-- fromdate: 01/07/2017
+-- todate: 07/07/2017
 
 
