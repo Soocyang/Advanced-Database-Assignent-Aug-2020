@@ -60,33 +60,34 @@ SQL > start {file_path/drag n drop here}
 2. Rider Performance - Toal Orders Delivered By Month - Details
 3. Rider Performance - Average time taken to delivered orders
 
-## Triggers
-1. 
-2. 
-
-1. 
-2. 
-
-1. 
-2. 
-
-1. 
-2. 
-
-
-- Sum automatically the subtotal with the delivery fees
-- Check Promo Code/ Expiry date
-- OrderList --> PriceEach Auto Update
-
 ## Procedures
-1. 
-2. 
+1. Insert_menu -- input number of fooditem, loop the input and insert into the fooditemlist
+2. Update_menu -- update the price of the menu item
 
-1. 
-2. 
+1. Insert_orders -- input orders details, orders, Check Promo Code/ Expiry date, 
+                 -- check customer with payment method of credits need verify,
+                 -- Sum automatically the subtotal with the delivery fees,
+2. Insert_orderList -- check food menu must all from the same restaurant / cannot from different restaurant with same order id
 
-1. 
-2. 
+1. Insert_categoryList  -- the restaurant type 
+                        -- categoryList 
+2. Delete_categoryList  -- The type of the restaurant
 
-1. 
-2. 
+1. Insert_reviews   -- check orders legit or not 
+                    -- cancelled order insert cannot review 
+                    -- Comments cannot more than 400 char
+2. Update_review  -- reorder == yes or no
+
+## Triggers
+### For menu
+1. verify_create_menu
+2. verify_update_menu
+
+1. verify_create_orders
+2. verify_create_orderList
+
+1. verify_new_restaurant
+2. verify_update_restaurant
+
+1. verify_create_reviews
+2. veridy_update_reviews
