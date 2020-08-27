@@ -92,14 +92,15 @@ WHERE   restaurantId = 1001 AND
 --==========================================
 
 -- DISPLAY RESTAURANT CATEGORY
-COLUMN restaurantName FORMAT a30
-COLUMN restaurantDesc FORMAT a30
-COLUMN email FORMAT a30
+COLUMN restaurantName FORMAT a45
+COLUMN categoryId FORMAT 9999
 COLUMN categoryName FORMAT a20
 
-SELECT r.restaurantName, r.restaurantDesc, r.email, cat.categoryName
+SELECT r.restaurantName, cat.categoryId, cat.categoryName
 FROM restaurant r, categoryList cl, category cat
 WHERE r.restaurantId = cl.restaurantId AND
       cl.categoryId = cat.categoryId AND
       cl.restaurantId = 1001;
 CLEAR COLUMNS
+
+

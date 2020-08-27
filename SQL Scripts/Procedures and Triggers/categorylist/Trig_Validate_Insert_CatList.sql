@@ -17,7 +17,7 @@ BEGIN
             cl.restaurantId = :new.restaurantId
     GROUP BY r.restaurantId;
 
-    IF v_no_of_category > 6 THEN
+    IF v_no_of_category >= 6 THEN
         RAISE e_toomany_category;
     END IF;
 
