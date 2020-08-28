@@ -20,7 +20,7 @@
 
 -- show all orders 
 
-ACCEPT v_RiderId NUMBER    FORMAT '9999'   PROMPT 'Enter value Rider ID format(9999): '
+ACCEPT v_RiderId NUMBER    FORMAT '9999'   PROMPT 'Enter value Rider ID format(9999): R'
 ACCEPT v_Year    DATE      FORMAT 'YYYY'   PROMPT 'Enter value Year format(YYYY): '
 
 TTITLE CENTER 'RIDERS PERFORMANCE REPORT' SKIP 1 -
@@ -44,10 +44,7 @@ WHERE  o.riderId = r.riderId AND
        o.riderId = &v_RiderId
 GROUP BY EXTRACT(MONTH FROM o.orderDate), r.riderId, r.riderName;
 
-COLUMN month CLEAR
-COLUMN riderId CLEAR
-COLUMN riderName CLEAR
-COLUMN Total_Orders_Delivered CLEAR
+CLEAR COLUMNS
 CLEAR BREAKS
 TTITLE OFF
 

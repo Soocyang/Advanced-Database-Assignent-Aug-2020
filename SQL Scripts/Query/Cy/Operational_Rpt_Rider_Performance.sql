@@ -7,7 +7,7 @@
 
 -- Rider performance rpt - by time taken / Average Time Taken
 
-ACCEPT v_riderID  NUMBER FORMAT '9999'         PROMPT 'Enter value for Rider ID format(9999): '
+ACCEPT v_riderID  NUMBER FORMAT '9999'         PROMPT 'Enter value for Rider ID format(9999): R'
 ACCEPT v_fromDate DATE   FORMAT 'DD/MM/YYYY'   PROMPT 'Enter value for from date format(DD/MM/YYYY): '
 ACCEPT v_toDate   DATE   FORMAT 'DD/MM/YYYY'   PROMPT 'Enter value for to date format(DD/MM/YYYY): '
 

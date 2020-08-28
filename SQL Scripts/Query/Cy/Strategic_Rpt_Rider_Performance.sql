@@ -2,22 +2,20 @@
 -- TO GET ALL TOTAL ORDERS DELIVERED FROM ALL RECORDS BY YEARS
 -- ===========================================================
 
--- CREATE OR REPLACE VIEW views_total_orders_delivered_by_year AS
---       SELECT r.riderId, r.riderName, EXTRACT(YEAR FROM o.orderDate) year, count(o.orderId) Total_Orders_Delivered_By_Year
---       FROM orders o, riders r
---       WHERE o.riderId = r.riderId
---       GROUP BY r.riderId, r.riderName, EXTRACT(YEAR FROM o.orderDate)
---       ORDER BY r.riderId, year;
+CREATE OR REPLACE VIEW views_total_orders_delivered_by_year AS
+      SELECT r.riderId, r.riderName, EXTRACT(YEAR FROM o.orderDate) year, count(o.orderId) Total_Orders_Delivered_By_Year
+      FROM orders o, riders r
+      WHERE o.riderId = r.riderId
+      GROUP BY r.riderId, r.riderName, EXTRACT(YEAR FROM o.orderDate)
+      ORDER BY r.riderId, year;
 
 -- select * from views_total_orders_delivered_by_year;
 
 -- ===========================================================
 
-
 -- =========================================================================
 --   RIDERS PERFORMANCE REPORT - TOTAL ORDERS DELIVERED BY COMPARING YEARS
 -- =========================================================================
-
 
 -- SPOOL 'D:\RIDERS_PERFORMANCE_REPORT_2.txt'
 
@@ -36,14 +34,15 @@ COLUMN riderPhone FORMAT a15 Heading "Contact No."
 COLUMN Year_1 FORMAT 9999 Heading "Year &v_Year1"
 COLUMN Year_2 FORMAT 9999 Heading "Year &v_Year2"
 COLUMN Year_3 FORMAT 9999 Heading "Year &v_Year3"
-
+COLUMN PercentChange FORMAT 99.99 Heading "Performance in %"
 
 SELECT CONCAT('R',r.riderId) as riderId, 
        r.riderName, 
        r.riderPhone, 
        v1.Total_Orders_Delivered_By_Year as Year_1,
        v2.Total_Orders_Delivered_By_Year as Year_2,
-       v3.Total_Orders_Delivered_By_Year as Year_3
+       v3.Total_Orders_Delivered_By_Year as Year_3,
+       (100 * (v3.Total_Orders_Delivered_By_Year - v1.Total_Orders_Delivered_By_Year) / v1.Total_Orders_Delivered_By_Year) AS PercentChange
 FROM   riders r,
        views_total_orders_delivered_by_year v1,
        views_total_orders_delivered_by_year v2,
@@ -53,20 +52,17 @@ WHERE  (r.riderId = v1.riderId) AND
        (r.riderId = v2.riderId) AND
        (v2.year = &v_Year2) AND
        (r.riderId = v3.riderId) AND
-       (v3.year = &v_Year3);
+       (v3.year = &v_Year3)
+ORDER BY PercentChange DESC
+FETCH NEXT 18 ROW ONLY;
 
-COLUMN riderId CLEAR
-COLUMN riderName CLEAR
-COLUMN riderPhone CLEAR
-COLUMN Year_1 CLEAR
-COLUMN Year_2 CLEAR
-COLUMN Year_3 CLEAR
+CLEAR COLUMNS
 TTITLE OFF
 
 -- SPOOL OFF
-
 
 -- TEST DATA
 -- year 1: 2017
 -- year 1: 2018
 -- year 1: 2019
+
