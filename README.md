@@ -37,7 +37,6 @@ Execute the file
 SQL > start {file_path/drag n drop here}
 ```
 
-
 ## Queries
 
 ### Brendan Chew Jian Wen (Restaurant/Orders)
@@ -49,6 +48,7 @@ SQL > start {file_path/drag n drop here}
 1. Promotion Code Used Count(*) compare over month
 2. Order + Promotion Promotion By (Sales) link to order compare over month 
 3. Customers with highest orders by location by month
+4. Orders with Promotion compare wothout Promotion
 
 ### Cheah Poh Reng (Reviews/Menu)
 1. Reviews with Reorder(True?) Total Reorder
@@ -61,6 +61,11 @@ SQL > start {file_path/drag n drop here}
 3. Rider Performance - Average time taken to delivered orders
 
 ## Procedures
+1. Insert_categoryList  -- the restaurant type 
+                        -- categoryList 
+2. Delete_categoryList  -- The type of the restaurant
+
+
 1. Insert_menu -- input number of fooditem, loop the input and insert into the fooditemlist
 2. Update_menu -- update the price of the menu item
 
@@ -69,10 +74,6 @@ SQL > start {file_path/drag n drop here}
                  -- Sum automatically the subtotal with the delivery fees,
 2. Insert_orderList -- check food menu must all from the same restaurant / cannot from different restaurant with same order id
 
-1. Insert_categoryList  -- the restaurant type 
-                        -- categoryList 
-2. Delete_categoryList  -- The type of the restaurant
-
 1. Insert_reviews   -- check orders legit or not 
                     -- cancelled order insert cannot review 
                     -- Comments cannot more than 400 char
@@ -80,6 +81,9 @@ SQL > start {file_path/drag n drop here}
 
 ## Triggers
 ### For menu
+1. Trigger Update Audit Log When Insert Category List
+2. Trigger Validate Insert Category List 
+
 1. verify_create_menu
 2. verify_update_menu
 
