@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE proc_rider_performance_strategicRpt(IN_FirstYear IN VARCHAR,
+CREATE OR REPLACE PROCEDURE proc_rider_performance_summaryRpt(IN_FirstYear IN VARCHAR,
                                                                 IN_SecondYear IN VARCHAR,
                                                                 IN_ThirdYear IN VARCHAR)
 IS
@@ -42,45 +42,49 @@ BEGIN
         END IF;
     END IF;
 
-    DBMS_OUTPUT.PUT_LINE(' ');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',48,' ') ||'SUMMARY REPORT');
     DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',25,' ') ||'RIDERS PERFORMANCE REPORT - TOTAL ORDERS DELIVERED BY YEARS');
     DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',25,' ') || LPAD('=',59,'='));
 
-
-
+    -- OPEN QUERY 
     OPEN Report_Cursor;
     LOOP
-    FETCH Report_Cursor into Report_rec;
+    FETCH Report_Cursor into Report_rec;        -- FETCH RECORDS
     EXIT WHEN Report_Cursor%NOTFOUND;
 
+        -- PRINT PAGES BY PAGES
         IF(v_loop = 0 OR v_loop = 20) THEN
-                DBMS_OUTPUT.PUT_LINE(chr(10));
-                DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
-                                    RPAD(TO_CHAR(sysdate,'dd/mm/yyyy'), 10, ' ')||
-                                    LPAD(' ', 70, ' ')||
-                                    'Page: '||LPAD(v_pageCount, 2, ' '));
+            DBMS_OUTPUT.PUT_LINE(' ');
+            DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
+                                RPAD(TO_CHAR(sysdate,'dd/mm/yyyy'), 10, ' ')||
+                                LPAD(' ', 70, ' ')||
+                                'Page: '||LPAD(v_pageCount, 2, ' '));
 
-                DBMS_OUTPUT.PUT_LINE(chr(10)|| 'RIDERS INFORMATION                        TOTAL NUMBER OF ORDERS');
-                DBMS_OUTPUT.PUT_LINE(' ');
-                DBMS_OUTPUT.PUT_LINE(RPAD('Rider ID', 10, ' ')||
-                                        RPAD('Rider Name', 33, ' ')||
-                                        RPAD('Contact No.', 13, ' ') ||
-                                        'Year '||RPAD(IN_FirstYear, 4,' ')||' '||
-                                        'Year '||RPAD(IN_SecondYear, 4,' ')||' '||
-                                        'Year '||RPAD(IN_ThirdYear, 4,' ')||' '||
-                                        RPAD('Performance in %', 20,' '));
-
-                DBMS_OUTPUT.PUT_LINE(RPAD('=', 9 ,'=')||' '||
-                                        RPAD('=', 30 ,'=')||' '||
-                                        LPAD('=', 14 ,'=')||' '||
-                                        LPAD('=', 9 ,'=')||' '||
-                                        LPAD('=', 9 ,'=')||' '||
-                                        LPAD('=', 9 ,'=')||' '||
-                                        LPAD('=', 16 ,'='));
-                v_loop := 0;
-                v_pageCount := v_pageCount + 1;
+            -- COLUMNS HEADERS
+            DBMS_OUTPUT.PUT_LINE(' ');
+            DBMS_OUTPUT.PUT_LINE(LPAD(' ', 10,' ')||'RIDERS INFORMATION'||LPAD(' ', 31,' ')||'TOTAL NUMBER OF ORDERS');
+            DBMS_OUTPUT.PUT_LINE(' ');
+            DBMS_OUTPUT.PUT_LINE(RPAD('Rider ID', 10, ' ')||
+                                    RPAD('Rider Name', 33, ' ')||
+                                    RPAD('Contact No.', 13, ' ') ||
+                                    'Year '||RPAD(IN_FirstYear, 4,' ')||' '||
+                                    'Year '||RPAD(IN_SecondYear, 4,' ')||' '||
+                                    'Year '||RPAD(IN_ThirdYear, 4,' ')||' '||
+                                    RPAD('Performance in %', 20,' '));
+            -- COLUMNS SEPERATOR 
+            DBMS_OUTPUT.PUT_LINE(RPAD('=', 9 ,'=')||' '||
+                                    RPAD('=', 30 ,'=')||' '||
+                                    LPAD('=', 14 ,'=')||' '||
+                                    LPAD('=', 9 ,'=')||' '||
+                                    LPAD('=', 9 ,'=')||' '||
+                                    LPAD('=', 9 ,'=')||' '||
+                                    LPAD('=', 16 ,'='));
+            v_loop := 0;
+            v_pageCount := v_pageCount + 1;
         END IF;
 
+        -- PRINT RECORD
         DBMS_OUTPUT.PUT_LINE( RPAD(Report_rec.riderId, 10, ' ')|| 
                                 RPAD(Report_rec.riderName, 30, ' ')|| 
                                 LPAD(Report_rec.riderPhone, 15, ' ')|| 
@@ -90,22 +94,23 @@ BEGIN
                                 LPAD(TO_CHAR(Report_rec.PercentChange, 990.99), 15,' ') || ' %');
 
         
+        -- COUNT POSITIVE OR NEGATIVE PERFORMANCE
         IF Report_rec.PercentChange >= 0 THEN
             v_countPositive := v_countPositive + 1;
         ELSE        
             v_countNegative := v_countNegative + 1;
         END IF;
-                
+        
         v_loop := v_loop + 1;
 
     END LOOP;
 
-    DBMS_OUTPUT.PUT_LINE(LPAD(' ',50,' ')||'-------------------------------------- '||'-------------');
+    DBMS_OUTPUT.PUT_LINE(LPAD(' ',50,' ')||'************************************** '||'*************');
 
     DBMS_OUTPUT.PUT_LINE(LPAD(' ',50,' ')||'Total Riders With Positive Peformance: ' ||LPAD(TO_CHAR(v_countPositive, 999), 5, ' ')||' Riders');
     DBMS_OUTPUT.PUT_LINE(LPAD(' ',50,' ')||'Total Riders With Negative Peformance: ' ||LPAD(TO_CHAR(v_countNegative, 999), 5, ' ')||' Riders');
     DBMS_OUTPUT.PUT_LINE(' ');
-    DBMS_OUTPUT.PUT_LINE(LPAD('-END of report-',60,' '));
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',45,' ') ||'-END of REPORT-');
 
     EXCEPTION
         WHEN e_invalidInput THEN
@@ -117,4 +122,5 @@ BEGIN
 END;
 /
 
-exec proc_rider_performance_strategicRpt(2017,2018,2019);
+exec proc_rider_performance_summaryRpt(2017,2018,2019);
+
