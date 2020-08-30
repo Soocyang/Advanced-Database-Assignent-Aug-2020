@@ -25,24 +25,27 @@ ACCEPT v_Year    DATE      FORMAT 'YYYY'   PROMPT 'Enter value Year format(YYYY)
 
 TTITLE CENTER 'RIDERS PERFORMANCE REPORT' SKIP 1 -
 CENTER 'TOTAL ORDERS DELIVERED BY RIDER ID: &v_RiderId ON YEAR: &v_Year' SKIP 1 -
-CENTER ===========================================================  SKIP 1 -
+CENTER ============================================================  SKIP 1 -
 RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 2 -
 
-COLUMN month FORMAT a10 Heading 'Month'
-COLUMN riderId FORMAT a5 Heading 'R_ID'
-COLUMN riderName FORMAT a45 Heading 'Rider Name'
-COLUMN Total_Orders_Delivered FORMAT 999 Heading 'Total Orders Delivered'
+COLUMN month FORMAT a10 HEADING 'Month'
+COLUMN riderId FORMAT a5 HEADING 'R_ID'
+COLUMN riderName FORMAT a45 HEADING 'Rider Name'
+COLUMN Total_Orders_Delivered FORMAT 999 HEADING 'Total Orders Delivered'
+COLUMN AvgTimeTaken FORMAT 99.99 HEADING 'Average Delivery Time Taken'
 BREAK ON riderId ON riderName
 
 SELECT CONCAT('R', r.riderId) AS riderId, r.riderName,
        TO_CHAR(TO_DATE(EXTRACT(MONTH FROM o.orderDate),'mm'), 'MONTH') AS month, 
-       COUNT(o.orderId) AS Total_Orders_Delivered
+       COUNT(o.orderId) AS Total_Orders_Delivered,
+       AVG((o.receivedTime - o.estimatedTime)*24*60) as AvgTimeTaken
 FROM   orders o,
        riders r
 WHERE  o.riderId = r.riderId AND
        EXTRACT(YEAR FROM o.orderDate) = &v_Year AND
        o.riderId = &v_RiderId
-GROUP BY EXTRACT(MONTH FROM o.orderDate), r.riderId, r.riderName;
+GROUP BY EXTRACT(MONTH FROM o.orderDate), r.riderId, r.riderName
+ORDER BY EXTRACT(MONTH FROM o.orderDate);
 
 CLEAR COLUMNS
 CLEAR BREAKS

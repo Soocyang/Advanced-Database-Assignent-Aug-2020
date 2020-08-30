@@ -31,13 +31,12 @@ SELECT CONCAT('R', r.riderId) AS riderId, r.riderName,
         to_char(o.orderDate, 'DD/MM/YYYY') orderDate, 
         to_char(o.estimatedTime, 'HH12:MI AM') estimatedTime, 
         to_char(o.receivedTime, 'HH12:MI AM') receivedTime,
-       (o.receivedTime - o.estimatedTime)*24*60 as timeDifferences
-from orders o, riders r
-where r.riderId = o.riderId AND 
+       (o.receivedTime - o.estimatedTime)*24*60 AS timeDifferences
+FROM orders o, riders r
+WHERE r.riderId = o.riderId AND 
         o.orderDate BETWEEN TO_DATE('&v_fromDate', 'DD/MM/YYYY') AND TO_DATE('&v_toDate', 'DD/MM/YYYY') AND
         r.riderId = &v_riderID
-order by orderDate, estimatedTime;
-
+ORDER BY orderDate, estimatedTime;
 
 COLUMN riderId CLEAR
 COLUMN riderName CLEAR
