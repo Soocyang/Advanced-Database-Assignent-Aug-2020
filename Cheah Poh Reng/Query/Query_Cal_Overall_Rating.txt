@@ -1,0 +1,29 @@
+cl scr
+ALTER SESSION SET NLS_DATE_FORMAT = 'DD/MM/YYYY HH24:MI';
+
+
+set linesize 250
+set pagesize 100 
+
+COLUMN RESTAURANT_NAME FORMAT a50;
+COLUMN OVERALL_RATING FORMAT 9.9;
+
+ACCEPT input_year CHAR PROMPT 'INPUT Year:'
+
+    Select r.restaurantName AS RESTAURANT_NAME,
+	   SUM(re.rating)/COUNT(re.rating) AS OVERALL_RATING
+    From  Restaurant r, Menu m, orderDetails od, orders o, reviews re
+    Where r.restaurantId = m.restaurantId AND
+	  m.menuId = od.menuId AND
+          od.orderId = o.orderId AND	  
+	  EXTRACT(YEAR FROM o.orderDate) = &input_year AND 
+          o.orderId = re.orderId
+    GROUP BY r.restaurantName;
+
+
+
+
+
+
+
+

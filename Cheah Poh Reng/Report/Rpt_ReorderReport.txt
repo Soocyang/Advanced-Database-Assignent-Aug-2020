@@ -1,0 +1,94 @@
+CREATE OR REPLACE VIEW views_total_reorder_by_year AS
+   Select r.restaurantName AS RESTAURANT_NAME,
+	  EXTRACT(YEAR FROM o.orderDate) AS year,
+	  re.reorder AS status,
+	  COUNT(re.reorder) AS TOTAL_REORDER_IN_REVIEW
+   From  Restaurant r, Menu m, orderDetails od, orders o, reviews re
+   Where r.restaurantId = m.restaurantId AND
+	  m.menuId = od.menuId AND
+          od.orderId = o.orderId AND	  
+          o.orderId = re.orderId
+    GROUP BY r.restaurantName, EXTRACT(YEAR FROM o.orderDate),re.reorder;
+
+cl scr
+
+CREATE OR REPLACE PROCEDURE reorderRecord(IN_first_year IN number,
+                                              IN_second_year IN number,
+                                              IN_third_year IN number) IS
+
+v_pageCount NUMBER := 1;
+v_loop NUMBER := 0;
+
+
+CURSOR REORDER_CURSOR IS
+  SELECT r.restaurantName as RESTAURANT_NAME,
+         v1.TOTAL_REORDER_IN_REVIEW as Year_1,
+         v2.TOTAL_REORDER_IN_REVIEW as Year_2,
+         v3.TOTAL_REORDER_IN_REVIEW as Year_3
+  From  Restaurant r,reviews re,
+         views_total_reorder_by_year v1,
+         views_total_reorder_by_year v2,
+         views_total_reorder_by_year v3
+  WHERE  (r.restaurantName = v1.RESTAURANT_NAME) AND
+         (v1.year = IN_first_year) AND
+	 (v1.status = 'Yes') AND
+         (r.restaurantName = v2.RESTAURANT_NAME) AND
+         (v2.year = IN_second_year) AND
+	 (v2.status = 'Yes') AND
+         (r.restaurantName = v3.RESTAURANT_NAME) AND
+         (v3.year = IN_third_year) AND
+         (v3.status = 'Yes')
+  Group by r.restaurantName,v1.TOTAL_REORDER_IN_REVIEW,v2.TOTAL_REORDER_IN_REVIEW,v3.TOTAL_REORDER_IN_REVIEW;
+
+reorder_rec REORDER_CURSOR%ROWTYPE;
+reorder_total NUMBER(12);
+
+BEGIN
+DBMS_OUTPUT.PUT_LINE(CHR(10));
+    DBMS_OUTPUT.PUT_LINE('             '||LPAD(' ',28,' ')||' Restaurants Reordered Report');
+    DBMS_OUTPUT.PUT_LINE('             '||LPAD(' ',26,' ')||RPAD('=',34,'='));
+
+             
+
+    OPEN REORDER_CURSOR;
+    LOOP
+    FETCH REORDER_CURSOR INTO reorder_rec;
+    EXIT WHEN REORDER_CURSOR%NOTFOUND;
+
+        IF(v_loop = 0 OR v_loop = 20) THEN
+            DBMS_OUTPUT.PUT_LINE(CHR(10));
+            DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
+                                 RPAD(TO_CHAR(sysdate,'dd/mm/yyyy'), 10, ' ')||
+                                 RPAD(' ', 75, ' ')||
+                                 'Page: '||LPAD(v_pageCount, 1, ' '));
+           DBMS_OUTPUT.PUT_LINE(CHR(10));
+           DBMS_OUTPUT.PUT_LINE('Restaurant Name                             '||'Year 1    '||'Year 2    '||'Year 3   '||' TOTAL   '||'Reordered '||'   LATEST RATE ');
+           DBMS_OUTPUT.PUT_LINE('==========================================='||
+				' ========='||' ========='||' ========'||' ======='||' ==========='||' ===============');   
+            v_loop := 0;
+            v_pageCount := v_pageCount + 1;
+        END IF;
+
+		Select count(reorder)
+		INTO reorder_total
+		From  Restaurant r, Menu m, orderDetails od, orders o, reviews re
+  	        Where r.restaurantName = reorder_rec.RESTAURANT_NAME AND
+	              r.restaurantId = m.restaurantId AND
+		      m.menuId = od.menuId AND
+        	      od.orderId = o.orderId AND	  
+         	      o.orderId = re.orderId;
+		
+             DBMS_OUTPUT.PUT_LINE(RPAD(reorder_rec.RESTAURANT_NAME,38,' ')||                                 
+				  LPAD(reorder_rec.Year_1,10,' ')||
+                                  LPAD(reorder_rec.Year_2,10,' ')||
+                                  LPAD(reorder_rec.Year_3,10,' ')||
+                                  LPAD(reorder_rec.Year_1+reorder_rec.Year_2+reorder_rec.Year_3,10,' ')||
+				  LPAD(TO_CHAR(((reorder_rec.Year_1+reorder_rec.Year_2+reorder_rec.Year_3)/reorder_total)*100,'99'),9,' ')||' %'||
+				  LPAD(TO_CHAR(100*(reorder_rec.Year_3-reorder_rec.Year_2)/reorder_rec.Year_2,'999.999'),13,' ')||' %');
+	    v_loop := v_loop + 1;
+
+    END LOOP;
+END;
+/
+
+exec reorderRecord(2017,2018,2019);

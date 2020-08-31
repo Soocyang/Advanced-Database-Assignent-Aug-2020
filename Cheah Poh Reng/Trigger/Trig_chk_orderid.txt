@@ -1,0 +1,34 @@
+ALTER SESSION SET NLS_DATE_FORMAT='DD/MM/YYYY HH24:MI';
+
+CREATE OR REPLACE TRIGGER TRG_CHK_ORDERID
+BEFORE INSERT ON reviews
+FOR EACH ROW
+DECLARE
+   v_Id reviews.reviewId%TYPE;
+   e_orderUnavailable  exception;
+
+BEGIN
+   SELECT reviewId
+   INTO   v_Id
+   FROM   reviews
+   WHERE (orderId = :new.orderId);
+
+
+   IF SQL%FOUND THEN
+         raise e_orderUnavailable;
+   END IF;
+
+EXCEPTION
+   WHEN NO_DATA_FOUND THEN
+        NULL;
+
+   WHEN e_orderUnavailable THEN
+        raise_application_error(-20001, 'INSERT FAILED: ORDER COMPLETED MADE REVIEW!');
+
+    
+
+END;
+/
+
+--insert into reviews values(300123,100154,'The fries were great too.',5,TO_DATE('22/01/2017 18:59:48', 'DD/MM/YYYY HH24:MI:SS'),'No');
+
