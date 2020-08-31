@@ -21,7 +21,6 @@ CREATE OR REPLACE VIEW views_total_orders_delivered_by_year AS
 
 ACCEPT v_Year1   DATE   FORMAT 'YYYY'   PROMPT 'Enter value 1st Year format(YYYY): '
 ACCEPT v_Year2   DATE   FORMAT 'YYYY'   PROMPT 'Enter value 2nd Year format(YYYY): '
-ACCEPT v_Year3   DATE   FORMAT 'YYYY'   PROMPT 'Enter value 3rd Year format(YYYY): '
 
 TTITLE CENTER 'RIDERS PERFORMANCE REPORT - TOTAL ORDERS DELIVERED BY YEARS' -
 RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 1 -
@@ -33,7 +32,6 @@ COLUMN riderName FORMAT a45 Heading "Rider Name"
 COLUMN riderPhone FORMAT a15 Heading "Contact No."
 COLUMN Year_1 FORMAT 9999 Heading "Year &v_Year1"
 COLUMN Year_2 FORMAT 9999 Heading "Year &v_Year2"
-COLUMN Year_3 FORMAT 9999 Heading "Year &v_Year3"
 COLUMN PercentChange FORMAT 99.99 Heading "Performance in %"
 
 SELECT CONCAT('R',r.riderId) as riderId, 
@@ -41,18 +39,14 @@ SELECT CONCAT('R',r.riderId) as riderId,
        r.riderPhone, 
        v1.Total_Orders_Delivered_By_Year as Year_1,
        v2.Total_Orders_Delivered_By_Year as Year_2,
-       v3.Total_Orders_Delivered_By_Year as Year_3,
-       (100 * (v3.Total_Orders_Delivered_By_Year - v1.Total_Orders_Delivered_By_Year) / v1.Total_Orders_Delivered_By_Year) AS PercentChange
+       (100 * (v2.Total_Orders_Delivered_By_Year - v1.Total_Orders_Delivered_By_Year) / v1.Total_Orders_Delivered_By_Year) AS PercentChange
 FROM   riders r,
        views_total_orders_delivered_by_year v1,
-       views_total_orders_delivered_by_year v2,
-       views_total_orders_delivered_by_year v3
+       views_total_orders_delivered_by_year v2
 WHERE  (r.riderId = v1.riderId) AND
        (v1.year = &v_Year1) AND
        (r.riderId = v2.riderId) AND
-       (v2.year = &v_Year2) AND
-       (r.riderId = v3.riderId) AND
-       (v3.year = &v_Year3)
+       (v2.year = &v_Year2)
 ORDER BY PercentChange DESC
 FETCH NEXT 18 ROW ONLY;
 

@@ -80,7 +80,7 @@ END;
 
 --==============TEST DATA===================
 -- insert_restaurant_category([res_id], [cat_id]);
-exec delete_restaurant_category(1001, 1002);
+exec delete_restaurant_category(1001, 1019);
 
 -- WE do this "INSERT INTO categoryList VALUES(IN_RESTAURANTID, IN_CATEGORYID);"
 

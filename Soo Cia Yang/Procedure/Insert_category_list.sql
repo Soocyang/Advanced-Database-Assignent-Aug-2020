@@ -72,15 +72,13 @@ EXCEPTION
     WHEN NO_DATA_FOUND THEN
       raise_application_error (-20002,'No records found for the category or the restaurant.');
 
-    WHEN OTHERS THEN
-      raise_application_error (-20003,'An error has occurred when inserting the restaurant category. Please contact administrator');
     
 END;
 /
 
 --==============TEST DATA===================
 -- insert_restaurant_category([res_id], [cat_id]);
-exec insert_restaurant_category(1001, 1002);
+exec insert_restaurant_category(1001, 1002)
 
 -- WE do this "INSERT INTO categoryList VALUES(IN_RESTAURANTID, IN_CATEGORYID);"
 

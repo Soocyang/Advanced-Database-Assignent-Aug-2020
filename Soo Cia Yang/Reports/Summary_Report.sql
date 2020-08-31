@@ -1,6 +1,5 @@
 CREATE OR REPLACE PROCEDURE proc_rider_performance_summaryRpt(IN_FirstYear IN VARCHAR,
-                                                                IN_SecondYear IN VARCHAR,
-                                                                IN_ThirdYear IN VARCHAR)
+                                                                IN_SecondYear IN VARCHAR)
 IS
     v_countPositive number := 0;
     v_countNegative  number := 0;
@@ -15,18 +14,14 @@ IS
             r.riderPhone, 
             v1.Total_Orders_Delivered_By_Year as Year_1,
             v2.Total_Orders_Delivered_By_Year as Year_2,
-            v3.Total_Orders_Delivered_By_Year as Year_3,
-            (100 * (v3.Total_Orders_Delivered_By_Year - v1.Total_Orders_Delivered_By_Year) / v1.Total_Orders_Delivered_By_Year) AS PercentChange
+            (100 * (v2.Total_Orders_Delivered_By_Year - v1.Total_Orders_Delivered_By_Year) / v1.Total_Orders_Delivered_By_Year) AS PercentChange
         FROM riders r,
             views_total_orders_delivered_by_year v1,
-            views_total_orders_delivered_by_year v2,
-            views_total_orders_delivered_by_year v3
+            views_total_orders_delivered_by_year v2
         WHERE  (r.riderId = v1.riderId) AND
             (v1.year = IN_FirstYear) AND
             (r.riderId = v2.riderId) AND
-            (v2.year = IN_SecondYear) AND
-            (r.riderId = v3.riderId) AND
-            (v3.year = IN_ThirdYear)
+            (v2.year = IN_SecondYear)
         ORDER BY riderId
         FETCH NEXT 15 ROW ONLY;
 
@@ -34,10 +29,10 @@ IS
 
 BEGIN
 
-    IF ((IS_NUMBER(IN_FirstYear) = 0) OR (IS_NUMBER(IN_SecondYear) = 0) OR (IS_NUMBER(IN_ThirdYear) = 0)) THEN
+    IF ((IS_NUMBER(IN_FirstYear) = 0) OR (IS_NUMBER(IN_SecondYear) = 0)) THEN
         raise e_invalidInput;
     ELSE
-        IF ((IN_FirstYear > TO_CHAR(sysdate,'yyyy')) OR (IN_SecondYear > TO_CHAR(sysdate,'yyyy')) OR (IN_ThirdYear > TO_CHAR(sysdate,'yyyy'))) THEN
+        IF ((IN_FirstYear > TO_CHAR(sysdate,'yyyy')) OR (IN_SecondYear > TO_CHAR(sysdate,'yyyy'))) THEN
             raise e_invalidYear;
         END IF;
     END IF;
@@ -70,13 +65,11 @@ BEGIN
                                     RPAD('Contact No.', 13, ' ') ||
                                     'Year '||RPAD(IN_FirstYear, 4,' ')||' '||
                                     'Year '||RPAD(IN_SecondYear, 4,' ')||' '||
-                                    'Year '||RPAD(IN_ThirdYear, 4,' ')||' '||
                                     RPAD('Performance in %', 20,' '));
             -- COLUMNS SEPERATOR 
             DBMS_OUTPUT.PUT_LINE(RPAD('=', 9 ,'=')||' '||
                                     RPAD('=', 30 ,'=')||' '||
                                     LPAD('=', 14 ,'=')||' '||
-                                    LPAD('=', 9 ,'=')||' '||
                                     LPAD('=', 9 ,'=')||' '||
                                     LPAD('=', 9 ,'=')||' '||
                                     LPAD('=', 16 ,'='));
@@ -90,7 +83,6 @@ BEGIN
                                 LPAD(Report_rec.riderPhone, 15, ' ')|| 
                                 LPAD(Report_rec.Year_1, 7,' ') || 
                                 LPAD(Report_rec.Year_2, 11,' ') || 
-                                LPAD(Report_rec.Year_3, 11,' ') ||
                                 LPAD(TO_CHAR(Report_rec.PercentChange, 990.99), 15,' ') || ' %');
 
         
@@ -122,5 +114,5 @@ BEGIN
 END;
 /
 
-exec proc_rider_performance_summaryRpt(2017,2018,2019);
+exec proc_rider_performance_summaryRpt(2017,2018);
 

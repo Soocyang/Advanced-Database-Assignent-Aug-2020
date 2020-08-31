@@ -38,19 +38,13 @@ WHERE r.riderId = o.riderId AND
         r.riderId = &v_riderID
 ORDER BY orderDate, estimatedTime;
 
-COLUMN riderId CLEAR
-COLUMN riderName CLEAR
-COLUMN orderDate CLEAR
-COLUMN estimatedTime CLEAR
-COLUMN receivedTime CLEAR
-CLEAR BREAKS;
+CLEAR COLUMNS
+CLEAR BREAKS
 TTITLE OFF
 
 -- Logic
 
 -- ADD LOCATION
-
-
 
 -- TEST DATA
 
