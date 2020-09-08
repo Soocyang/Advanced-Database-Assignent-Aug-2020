@@ -2,8 +2,8 @@ CREATE OR REPLACE PROCEDURE RESTAURANT_PERFORMANCE_SUMMARY_REPORT(IN_FIRSTYEAR I
 IS
     V_COUNTPOSITIVE NUMBER := 0;
     V_COUNTNEGATIVE NUMBER := 0;
-    V_PAGECOUNT     NUMBER := 1;
-    V_LOOP          NUMBER := 0;
+    V_PAGE          NUMBER := 1;
+    V_ROWS          NUMBER := 0;
     E_INVALIDINPUT EXCEPTION;
     E_INVALIDYEAR  EXCEPTION;
 
@@ -49,12 +49,12 @@ BEGIN
     EXIT WHEN REPORT_CURSOR%NOTFOUND;
 
         -- PRINT PAGES BY PAGES
-        IF(V_LOOP = 0 OR V_LOOP = 20) THEN
+        IF(V_ROWS = 0 OR V_ROWS = 20) THEN
             DBMS_OUTPUT.PUT_LINE(' ');
             DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
                                 RPAD(TO_CHAR(SYSDATE,'DD/MM/YYYY'), 10, ' ')||
                                 LPAD(' ', 70, ' ')||
-                                'Page: '||LPAD(V_PAGECOUNT, 2, ' '));
+                                'Page: '||LPAD(V_PAGE, 2, ' '));
 
             -- COLUMNS HEADERS
             DBMS_OUTPUT.PUT_LINE(' ');
@@ -71,8 +71,8 @@ BEGIN
                                     LPAD('=', 9 ,'=')||' '||
                                     LPAD('=', 9 ,'=')||' '||
                                     LPAD('=', 19 ,'='));
-            V_LOOP := 0;
-            V_PAGECOUNT := V_PAGECOUNT + 1;
+            V_ROWS := 0;
+            V_PAGE := V_PAGE + 1;
         END IF;
 
         -- PRINT RECORD
@@ -90,7 +90,7 @@ BEGIN
             V_COUNTNEGATIVE := V_COUNTNEGATIVE + 1;
         END IF;
         
-        V_LOOP := V_LOOP + 1;
+        V_ROWS := V_ROWS + 1;
 
     END LOOP;
 
