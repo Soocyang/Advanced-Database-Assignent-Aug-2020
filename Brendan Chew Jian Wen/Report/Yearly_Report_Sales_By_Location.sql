@@ -43,7 +43,7 @@ BEGIN
     -- REPORT HEADER
     DBMS_OUTPUT.PUT_LINE(CHR(10));
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'Detail Report');
-    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',22,' ') ||'Total Orders And Sales Report On Year ' || IN_YEAR || 'in ' || IN_STATE);
+    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',22,' ') ||'Total Orders And Sales Report On Year ' || IN_YEAR || 'In ' || IN_STATE);
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',22,' ') || LPAD('=',63,'='));
 
     -- OPEN QUERY 
@@ -110,16 +110,16 @@ BEGIN
 
     DBMS_OUTPUT.PUT_LINE(' ');
 
-    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'-END OF REPORT-');
+    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'-End Of Report-');
 
 EXCEPTION
     
     WHEN E_INVALIDINPUT THEN
-        DBMS_OUTPUT.PUT_LINE('INVALID  INPUT: INPUT YEAR MUST BE A NUMBERIC.');
+        DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Year Must Be A Numberic.');
     WHEN E_INVALIDYEAR THEN
-        DBMS_OUTPUT.PUT_LINE('INVALID  INPUT: INPUT YEAR CANNOT BE FUTURE YEAR.');
+        DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Year Cannot Be Future Year.');
     WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('ERROR FOUND. PLEASE CONTACT YOUR DATABASE ADMINISTRATOR');
+        DBMS_OUTPUT.PUT_LINE('Error Found. Please Contact Your Database Administrator');
 
 END;
 /

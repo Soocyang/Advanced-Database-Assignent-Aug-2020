@@ -38,8 +38,8 @@ BEGIN
     END IF;
 
     DBMS_OUTPUT.PUT_LINE(CHR(10));
-    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'SUMMARY REPORT');
-    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',25,' ') ||'RESTAURANT PERFORMANCE REPORT - TOTAL ORDERS SERVED BY YEARS');
+    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'Summary Report');
+    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',25,' ') ||'Restaurant Performance Report - Total Orders Served By Years');
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',25,' ') || LPAD('=',59,'='));
 
     -- OPEN QUERY 
@@ -51,20 +51,20 @@ BEGIN
         -- PRINT PAGES BY PAGES
         IF(V_LOOP = 0 OR V_LOOP = 20) THEN
             DBMS_OUTPUT.PUT_LINE(' ');
-            DBMS_OUTPUT.PUT_LINE(RPAD('PRINTED DATE: ', 14, ' ')||
+            DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
                                 RPAD(TO_CHAR(SYSDATE,'DD/MM/YYYY'), 10, ' ')||
                                 LPAD(' ', 70, ' ')||
-                                'PAGE: '||LPAD(V_PAGECOUNT, 2, ' '));
+                                'Page: '||LPAD(V_PAGECOUNT, 2, ' '));
 
             -- COLUMNS HEADERS
             DBMS_OUTPUT.PUT_LINE(' ');
-            DBMS_OUTPUT.PUT_LINE(LPAD(' ', 10,' ')||'RESTAURANT INFORMATION'||LPAD(' ', 31,' ')||'TOTAL NUMBER OF ORDERS');
+            DBMS_OUTPUT.PUT_LINE(LPAD(' ', 10,' ')||'Restaurant Information'||LPAD(' ', 31,' ')||'Total Number Of Orders');
             DBMS_OUTPUT.PUT_LINE(' ');
             DBMS_OUTPUT.PUT_LINE(RPAD('ID', 10, ' ')||
-                                    RPAD('RESTAUTANT', 60, ' ')||
-                                    'YEAR '||RPAD(IN_FIRSTYEAR, 5,' ')||
-                                    'YEAR '||RPAD(IN_SECONDYEAR, 5,' ')||
-                                    RPAD('PERFORMANCE IN %', 20,' '));
+                                    RPAD('Restautant', 60, ' ')||
+                                    'Year '||RPAD(IN_FIRSTYEAR, 5,' ')||
+                                    'Year '||RPAD(IN_SECONDYEAR, 5,' ')||
+                                    RPAD('Performance In %', 20,' '));
             -- COLUMNS SEPERATOR 
             DBMS_OUTPUT.PUT_LINE(RPAD('=', 9 ,'=')||' '||
                                     RPAD('=', 59 ,'=')||' '||
@@ -77,10 +77,10 @@ BEGIN
 
         -- PRINT RECORD
         DBMS_OUTPUT.PUT_LINE( RPAD(REPORT_REC.RESTAURANT_ID, 10, ' ')|| 
-                                RPAD(REPORT_REC.RESTAURANTNAME, 60, ' ')|| 
-                                LPAD(REPORT_REC.YEAR_1_TOTAL_SALES, 9,' ') || ' ' ||
-                                LPAD(REPORT_REC.YEAR_2_TOTAL_SALES, 9,' ') || ' ' ||
-                                LPAD(TO_CHAR(REPORT_REC.PERCENT_CHANGE, 990.99), 17,' ') || ' %');
+                              RPAD(REPORT_REC.RESTAURANTNAME, 60, ' ')|| 
+                              LPAD(REPORT_REC.YEAR_1_TOTAL_SALES, 9,' ') || ' ' ||
+                              LPAD(REPORT_REC.YEAR_2_TOTAL_SALES, 9,' ') || ' ' ||
+                              LPAD(TO_CHAR(REPORT_REC.PERCENT_CHANGE, 990.99), 17,' ') || ' %');
 
         
         -- COUNT POSITIVE OR NEGATIVE PERFORMANCE
@@ -94,11 +94,11 @@ BEGIN
 
     END LOOP;
 
-    DBMS_OUTPUT.PUT_LINE(RPAD('=', 9 ,'=')  ||' '||
-                         RPAD('=', 59 ,'=') ||' '||
-                         LPAD('=', 9 ,'=')  ||' '||
-                         LPAD('=', 9 ,'=')  ||' '||
-                         LPAD('=', 19 ,'='));
+    DBMS_OUTPUT.PUT_LINE( RPAD('=', 9 ,'=')  ||' '||
+                          RPAD('=', 59 ,'=') ||' '||
+                          LPAD('=', 9 ,'=')  ||' '||
+                          LPAD('=', 9 ,'=')  ||' '||
+                          LPAD('=', 19 ,'='));
 
     DBMS_OUTPUT.PUT_LINE(' ');
 
@@ -111,11 +111,11 @@ BEGIN
 
     EXCEPTION
         WHEN E_INVALIDINPUT THEN
-            DBMS_OUTPUT.PUT_LINE('INVALID  INPUT: INPUT YEAR MUST BE A NUMBERIC.');
+            DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Year Must Be A Numberic.');
         WHEN E_INVALIDYEAR THEN
-            DBMS_OUTPUT.PUT_LINE('INVALID  INPUT: INPUT YEAR CANNOT BE FUTURE YEAR.');
+            DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Year Cannot Be Future Year.');
         WHEN OTHERS THEN
-            DBMS_OUTPUT.PUT_LINE('ERROR FOUND. PLEASE CONTACT YOUR DATABASE ADMINISTRATOR');
+            DBMS_OUTPUT.PUT_LINE('Error Found. Please Contact Your Database Administrator');
 END;
 /
 

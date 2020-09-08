@@ -34,7 +34,7 @@ BEGIN
     V_TO_DATE   := TO_DATE(IN_TO_DATE, 'DD/MM/YYYY');
 
     -- CHECK IF DATE IS FUTURE
-    IF (V_FROM_DATE > sysdate) OR (V_TO_DATE > sysdate) THEN
+    IF (V_FROM_DATE > SYSDATE) OR (V_TO_DATE > SYSDATE) THEN
         RAISE E_INVALIDDATE;
     END IF;
 
@@ -45,8 +45,8 @@ BEGIN
 
     -- REPORT HEADER
     DBMS_OUTPUT.PUT_LINE(CHR(10));
-    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',45,' ') ||'ON DEMAND REPORT');
-    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',42,' ') ||'PAYMENT METHOD REPORT');
+    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',45,' ') ||'On Demand Report');
+    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',42,' ') ||'Payment Method Report');
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',25,' ') || LPAD('=',53,'='));
 
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',37,' ') || ' FROM '|| IN_FROM_DATE || ' TO ' ||  IN_TO_DATE );
@@ -60,15 +60,15 @@ BEGIN
         -- PRINT PAGES BY PAGES - PRINT ONLY IF THE RECORD COUNT IS 0 OR REACHES 20 THEN PRINT NEXT PAGE HEADINGS
         IF(V_ROWS = 0 OR V_ROWS = 20) THEN
             DBMS_OUTPUT.PUT_LINE(CHR(10));
-            DBMS_OUTPUT.PUT_LINE(RPAD('PRINTED DATE: ', 14, ' ')||
+            DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
                                 RPAD(TO_CHAR(SYSDATE,'DD/MM/YYYY'), 10, ' ')||
                                 LPAD(' ', 70, ' ')||
-                                'PAGE: '||LPAD(V_PAGE, 2, ' '));
+                                'Page: '||LPAD(V_PAGE, 2, ' '));
 
             -- COLUMNS HEADERS
             DBMS_OUTPUT.PUT_LINE(CHR(10));
-            DBMS_OUTPUT.PUT_LINE(RPAD('PAYMENT METHOD', 30, ' ')||
-                                    RPAD('PAYMENT COUNT', 30, ' '));
+            DBMS_OUTPUT.PUT_LINE(RPAD('Payment Method', 30, ' ')||
+                                    RPAD('Payment Count', 30, ' '));
 
             -- COLUMNS SEPERATOR 
             DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
@@ -87,19 +87,19 @@ BEGIN
 
     DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
                          RPAD('=', 29 ,'=')||' ');
-    DBMS_OUTPUT.PUT_LINE(LPAD('TOTAL ORDERS :',29,' ') || LPAD(TO_CHAR(V_TOTALORDERS, 999), 30, ' '));
+    DBMS_OUTPUT.PUT_LINE(LPAD('Total Orders :',29,' ') || LPAD(TO_CHAR(V_TOTALORDERS, 999), 30, ' '));
     DBMS_OUTPUT.PUT_LINE(' ');
-    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'-END OF REPORT-');
+    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'-End Of Report-');
 
 EXCEPTION
     WHEN E_INVALIDINPUT THEN
-        DBMS_OUTPUT.PUT_LINE('INVALID INPUT: INPUT DATE MUST BE DD/MM/YYYY.');
+        DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Date Must Be DD/MM/YYYY.');
     WHEN E_INVALIDDATE THEN
-        DBMS_OUTPUT.PUT_LINE('INVALID INPUT: INPUT DATE CANNOT BE FUTURE DATE.');
+        DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Date Cannot Be Future Date.');
     WHEN E_INVALID_TODATE THEN
-        DBMS_OUTPUT.PUT_LINE('INVALID INPUT: INPUT FROM DATE CANNOT BE GREATER THAN TO DATE.');
-    -- WHEN OTHERS THEN
-    --     DBMS_OUTPUT.PUT_LINE('ERROR FOUND. PLEASE CONTACT YOUR DATABASE ADMINISTRATOR');
+        DBMS_OUTPUT.PUT_LINE('Invalid Input: Input From Date Cannot Be Greater Than To Date.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error Found. Please Contact Your Database Administrator');
 END;
 /
 
