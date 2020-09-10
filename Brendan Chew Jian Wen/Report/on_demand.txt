@@ -142,12 +142,20 @@ BEGIN
 EXCEPTION
     WHEN E_INVALIDINPUT THEN
         DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Date Must Be DD/MM/YYYY.');
+        RAISE_APPLICATION_ERROR(-20005, 'Invalid Input: Input Date Must Be DD/MM/YYYY.');
+
     WHEN E_INVALIDDATE THEN
         DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Date Cannot Be Future Date.');
+        RAISE_APPLICATION_ERROR(-20006, 'Invalid Input: Input Date Cannot Be Future Date.');
+
     WHEN E_INVALID_TODATE THEN
         DBMS_OUTPUT.PUT_LINE('Invalid Input: Input From Date Cannot Be Greater Than To Date.');
+        RAISE_APPLICATION_ERROR(-20007, 'Invalid Input: Input From Date Cannot Be Greater Than To Date.');
+
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Error Found. Please Contact Your Database Administrator');
+        RAISE_APPLICATION_ERROR(-20010, 'Error Found. Please Contact Your Database Administrator.');
+
 END;
 /
 

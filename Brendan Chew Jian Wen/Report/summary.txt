@@ -112,10 +112,15 @@ BEGIN
     EXCEPTION
         WHEN E_INVALIDINPUT THEN
             DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Year Must Be A Numberic.');
+            RAISE_APPLICATION_ERROR(-20003, 'Invalid Input: Input Year Must Be A Numberic.');
+
         WHEN E_INVALIDYEAR THEN
             DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Year Cannot Be Future Year.');
+            RAISE_APPLICATION_ERROR(-20004, 'Invalid Input: Input Year Cannot Be Future Year.');
+
         WHEN OTHERS THEN
             DBMS_OUTPUT.PUT_LINE('Error Found. Please Contact Your Database Administrator');
+            RAISE_APPLICATION_ERROR(-20010, 'Error Found. Please Contact Your Database Administrator.');
 END;
 /
 
