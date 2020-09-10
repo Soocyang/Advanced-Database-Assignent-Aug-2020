@@ -6,6 +6,9 @@ CREATE OR REPLACE PROCEDURE insert_restaurant_category(IN_RESTAURANTID IN NUMBER
     v_categoryName   category.categoryName%TYPE;
     v_count          integer := 1;
 
+    e_parentnotfound    exception;
+    PRAGMA EXCEPTION_INIT(e_parentnotfound, -2291);
+
     CURSOR RESTURANT_CATEGORY_CURSOR IS
         SELECT cat.categoryName
         FROM restaurant r, categoryList cl, category cat
@@ -66,13 +69,12 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE (chr(10));
 
 EXCEPTION
-    WHEN DUP_VAL_ON_INDEX THEN
-      raise_application_error (-20001,'You have tried to insert a same category.');
-
     WHEN NO_DATA_FOUND THEN
-      raise_application_error (-20002,'No records found for the category or the restaurant.');
-
-    
+        raise_application_error(-20031,'No records found for the restaurant.');
+    WHEN e_parentnotfound THEN
+        raise_application_error(-20032,'No records found for the category or the restaurant.');
+    WHEN DUP_VAL_ON_INDEX THEN
+        raise_application_error(-20033,'You have tried to insert a same category.');
 END;
 /
 
@@ -102,3 +104,4 @@ WHERE r.restaurantId = cl.restaurantId AND
 CLEAR COLUMNS
 
 
+exec insert_restaurant_category(1001, 1022)

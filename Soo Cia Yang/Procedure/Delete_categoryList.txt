@@ -5,6 +5,7 @@ CREATE OR REPLACE PROCEDURE delete_restaurant_category(IN_RESTAURANTID IN NUMBER
     v_email          restaurant.email%TYPE;
     v_categoryName   category.categoryName%TYPE;
     v_count          integer := 1;
+    v_rowDeleted     integer;
 
     CURSOR RESTURANT_CATEGORY_CURSOR IS
         SELECT cat.categoryName
@@ -43,6 +44,11 @@ BEGIN
     WHERE  restaurantId = IN_RESTAURANTID AND
            categoryId = IN_CATEGORYID;
 
+    v_rowDeleted := SQL%ROWCOUNT;
+    IF (v_rowDeleted = 0) THEN
+        RAISE NO_DATA_FOUND;
+    END IF;
+
     -- DISPLAY SUCCESSFUL MESSAGE
     DBMS_OUTPUT.PUT_LINE (chr(10));
     DBMS_OUTPUT.PUT_LINE ('Category has been successfuly removed from the restaurant: ');
@@ -70,17 +76,17 @@ BEGIN
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-      raise_application_error (-20001,'No records found for the restaurant and the category type.');
+      raise_application_error (-20034,'No records found for the restaurant and the category type.');
 
     WHEN OTHERS THEN
-      raise_application_error (-20002,'An error has occurred when deleting the restaurant category. Please contact administrator');
+      raise_application_error (-20035,'An error has occurred when deleting the restaurant category. Please contact administrator');
     
 END;
 /
 
 --==============TEST DATA===================
 -- insert_restaurant_category([res_id], [cat_id]);
-exec delete_restaurant_category(1001, 1019);
+exec delete_restaurant_category(1001, 1002);
 
 -- WE do this "INSERT INTO categoryList VALUES(IN_RESTAURANTID, IN_CATEGORYID);"
 
@@ -92,15 +98,18 @@ WHERE   restaurantId = 1001 AND
 --==========================================
 
 -- DISPLAY RESTAURANT CATEGORY
-COLUMN restaurantName FORMAT a30
-COLUMN restaurantDesc FORMAT a30
+COLUMN restaurantName FORMAT a45
 COLUMN email FORMAT a30
 COLUMN categoryName FORMAT a20
+BREAK ON restaurantName ON email
 
-SELECT r.restaurantName, r.restaurantDesc, r.email, cat.categoryName
+SELECT r.restaurantName, r.email, cat.categoryId, cat.categoryName
 FROM restaurant r, categoryList cl, category cat
 WHERE r.restaurantId = cl.restaurantId AND
       cl.categoryId = cat.categoryId AND
       cl.restaurantId = 1001;
 CLEAR COLUMNS
 
+    DELETE FROM categoryList
+    WHERE  restaurantId = 1101 AND
+           categoryId = 1019;
