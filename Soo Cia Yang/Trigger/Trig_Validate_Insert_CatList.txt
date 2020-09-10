@@ -23,9 +23,12 @@ BEGIN
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        raise_application_error(-20001, 'Category cannot be insert: Either restaurant or category not found.');
+        raise_application_error(-20036, 'Category cannot be insert: Either restaurant or category not found.');
     WHEN e_toomany_category THEN
-        raise_application_error(-20002, 'There are too many category for this restaurant already. You cannot add more than 6 category for the restaurant.');
+        raise_application_error(-20037, 'There are too many category for this restaurant already. You cannot add more than 6 category for the restaurant.');
+    WHEN OTHERS THEN
+        raise_application_error (-20038,'There is an error when adding new category for the restaurant please contact database administrator');
+
 END;
 /
 

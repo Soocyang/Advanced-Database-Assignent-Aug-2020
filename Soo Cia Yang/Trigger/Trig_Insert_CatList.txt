@@ -29,6 +29,9 @@ BEGIN
    INSERT INTO audits_Restaurants (table_name, task_type, by_user, task_date)
    VALUES('CATEGORYLIST', l_task_type, USER, SYSDATE);
 
+   EXCEPTION
+      WHEN OTHERS THEN
+            raise_application_error(-20039,'An error has occurred inserting the audit log.');
    
 END;
 /
@@ -38,3 +41,7 @@ END;
 COLUMN TABLE_NAME FORMAT a25
 COLUMN BY_USER FORMAT a7
 SELECT * FROM audits_Restaurants;
+
+-- ======DELETE AUDIT TABLE=========
+
+DROP TABLE audits_Restaurants;
