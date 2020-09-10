@@ -9,11 +9,14 @@ RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 2 -
 COLUMN payment_method FORMAT a20 HEADING 'Payment Method'
 COLUMN payment_count FORMAT 99999 HEADING 'Payment Count'
 
-SELECT PAYMENTMETHOD as payment_method, COUNT(PAYMENTMETHOD) as payment_count
-FROM ORDERS o 
+BREAK ON payment_method SKIP 1
+
+SELECT PAYMENTMETHOD as payment_method, c.STATE , COUNT(PAYMENTMETHOD) as payment_count
+FROM ORDERS o, CUSTOMERS c 
 WHERE ORDERDATE BETWEEN TO_DATE('&v_fromDate', 'DD/MM/YYYY') AND TO_DATE('&v_toDate', 'DD/MM/YYYY')
-GROUP BY PAYMENTMETHOD
-ORDER BY payment_count DESC;
+AND o.CUSTOMERID = c.CUSTOMERID
+GROUP BY PAYMENTMETHOD, c.STATE 
+ORDER BY payment_method DESC, payment_count DESC;
 
 COLUMN payment_method CLEAR
 COLUMN payment_count CLEAR

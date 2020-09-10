@@ -22,6 +22,18 @@ IS
         ORDER BY PAYMENT_COUNT DESC;
 
     REPORT_REC REPORT_CURSOR%ROWTYPE;
+   
+    CURSOR REPORT_CURSOR_2 (PAYMENT_METHOD VARCHAR, FROM_DATE DATE, TO_DATE DATE) IS
+
+        SELECT C.STATE AS STATE, COUNT(C.STATE) AS STATE_COUNT
+        FROM ORDERS O, CUSTOMERS C
+        WHERE ORDERDATE BETWEEN FROM_DATE AND TO_DATE
+          AND O.PAYMENTMETHOD = PAYMENT_METHOD
+          AND O.CUSTOMERID = C.CUSTOMERID 
+        GROUP BY C.STATE
+        ORDER BY STATE_COUNT DESC;
+
+    REPORT_REC_2 REPORT_CURSOR_2%ROWTYPE;
 
 BEGIN
     -- CHECK IF DATE IS DATE
@@ -58,7 +70,7 @@ BEGIN
     EXIT WHEN REPORT_CURSOR%NOTFOUND;
 
         -- PRINT PAGES BY PAGES - PRINT ONLY IF THE RECORD COUNT IS 0 OR REACHES 20 THEN PRINT NEXT PAGE HEADINGS
-        IF(V_ROWS = 0 OR V_ROWS = 20) THEN
+        IF(V_ROWS = 0 OR V_ROWS >= 20) THEN
             DBMS_OUTPUT.PUT_LINE(CHR(10));
             DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
                                 RPAD(TO_CHAR(SYSDATE,'DD/MM/YYYY'), 10, ' ')||
@@ -68,42 +80,87 @@ BEGIN
             -- COLUMNS HEADERS
             DBMS_OUTPUT.PUT_LINE(CHR(10));
             DBMS_OUTPUT.PUT_LINE(RPAD('Payment Method', 30, ' ')||
-                                    RPAD('Payment Count', 30, ' '));
+                                 RPAD('State', 30, ' ')||
+                                 RPAD('Payment Count', 30, ' '));
 
-            -- COLUMNS SEPERATOR 
+        -- COLUMNS SEPERATOR 
             DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
+                                 RPAD('=', 29 ,'=')||' '||
                                  RPAD('=', 29 ,'=')||' ');
+
             V_ROWS := 0;
             V_PAGE := V_PAGE + 1;
         END IF;
 
         DBMS_OUTPUT.PUT_LINE( RPAD(REPORT_REC.PAYMENT_METHOD, 30, ' ')|| 
+                              LPAD(' ', 30, ' ')||
                               LPAD(REPORT_REC.PAYMENT_COUNT, 29, ' '));
         
         V_ROWS := V_ROWS + 1;
 
+        -- COLUMNS SEPERATOR 
+            DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
+                                 RPAD('=', 29 ,'=')||' '||
+                                 RPAD('=', 29 ,'=')||' ');
+
+        OPEN REPORT_CURSOR_2(REPORT_REC.PAYMENT_METHOD, V_FROM_DATE, V_TO_DATE);
+        LOOP
+        FETCH REPORT_CURSOR_2 INTO REPORT_REC_2;            -- FETCH RECORDS
+        EXIT WHEN REPORT_CURSOR_2%NOTFOUND;
+                    
+            DBMS_OUTPUT.PUT_LINE( RPAD(' ', 30, ' ')||
+                                  RPAD(REPORT_REC_2.STATE, 30, ' ')||
+                                  LPAD(REPORT_REC_2.STATE_COUNT, 29, ' '));
+
+            V_ROWS := V_ROWS + 1;
+
+        END LOOP;
+        CLOSE REPORT_CURSOR_2;
+        
+        DBMS_OUTPUT.PUT_LINE(' ');
+
+        -- COLUMNS SEPERATOR 
+            DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
+                                 RPAD('=', 29 ,'=')||' '||
+                                 RPAD('=', 29 ,'=')||' ');
+
         V_TOTALORDERS := V_TOTALORDERS + REPORT_REC.PAYMENT_COUNT;
     END LOOP;
+    CLOSE REPORT_CURSOR;
 
-    DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
-                         RPAD('=', 29 ,'=')||' ');
-    DBMS_OUTPUT.PUT_LINE(LPAD('Total Orders :',29,' ') || LPAD(TO_CHAR(V_TOTALORDERS, 999), 30, ' '));
+        -- COLUMNS SEPERATOR 
+        DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
+                             RPAD('=', 29 ,'=')||' '||
+                             RPAD('=', 29 ,'=')||' ');
+
+    DBMS_OUTPUT.PUT_LINE(RPAD(' ', 29 ,' ')||' '||
+                         LPAD('Total Orders :',29,' ')||
+                         LPAD(TO_CHAR(V_TOTALORDERS, 99999), 30, ' '));
     DBMS_OUTPUT.PUT_LINE(' ');
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'-End Of Report-');
 
 EXCEPTION
     WHEN E_INVALIDINPUT THEN
         DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Date Must Be DD/MM/YYYY.');
+        RAISE_APPLICATION_ERROR(-20005, 'Invalid Input: Input Date Must Be DD/MM/YYYY.');
+
     WHEN E_INVALIDDATE THEN
         DBMS_OUTPUT.PUT_LINE('Invalid Input: Input Date Cannot Be Future Date.');
+        RAISE_APPLICATION_ERROR(-20006, 'Invalid Input: Input Date Cannot Be Future Date.');
+
     WHEN E_INVALID_TODATE THEN
         DBMS_OUTPUT.PUT_LINE('Invalid Input: Input From Date Cannot Be Greater Than To Date.');
+        RAISE_APPLICATION_ERROR(-20007, 'Invalid Input: Input From Date Cannot Be Greater Than To Date.');
+
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Error Found. Please Contact Your Database Administrator');
+        RAISE_APPLICATION_ERROR(-20010, 'Error Found. Please Contact Your Database Administrator.');
+
 END;
 /
 
 EXEC ORDERS_PAYMENT_METHOD_ONDEMAND_REPORT('01/07/2017', '07/07/2017');
+EXEC ORDERS_PAYMENT_METHOD_ONDEMAND_REPORT('01/01/2017', '31/12/2017');
 
 
 
