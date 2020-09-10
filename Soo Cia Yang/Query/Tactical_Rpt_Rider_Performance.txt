@@ -32,13 +32,13 @@ COLUMN month FORMAT a10 HEADING 'Month'
 COLUMN riderId FORMAT a5 HEADING 'R_ID'
 COLUMN riderName FORMAT a45 HEADING 'Rider Name'
 COLUMN Total_Orders_Delivered FORMAT 999 HEADING 'Total Orders Delivered'
-COLUMN AvgTimeTaken FORMAT 99.99 HEADING 'Average Delivery Time Taken'
+COLUMN AvgTimeTaken FORMAT 999 HEADING 'Average Delivery Time (Minutes)'
 BREAK ON riderId ON riderName
 
 SELECT CONCAT('R', r.riderId) AS riderId, r.riderName,
        TO_CHAR(TO_DATE(EXTRACT(MONTH FROM o.orderDate),'mm'), 'MONTH') AS month, 
        COUNT(o.orderId) AS Total_Orders_Delivered,
-       AVG((o.receivedTime - o.estimatedTime)*24*60) as AvgTimeTaken
+       ROUND(AVG((o.receivedTime - o.estimatedTime)*24*60)) as AvgTimeTaken
 FROM   orders o,
        riders r
 WHERE  o.riderId = r.riderId AND

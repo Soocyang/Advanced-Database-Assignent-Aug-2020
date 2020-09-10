@@ -44,7 +44,6 @@ TTITLE OFF
 
 -- Logic
 
--- ADD LOCATION
 
 -- TEST DATA
 

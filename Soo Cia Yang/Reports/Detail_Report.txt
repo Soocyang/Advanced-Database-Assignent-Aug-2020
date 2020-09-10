@@ -2,6 +2,8 @@ CREATE OR REPLACE PROCEDURE proc_rider_performance_DetailRpt(IN_riderId IN VARCH
                                                                 IN_Year IN VARCHAR)
 IS
     v_total_orders_delivered_year number := 0;
+    V_avg_delivery_time           number := 0;
+    v_rider_status                VARCHAR(100);
 
     v_pageCount     number := 1;
     V_loop          number := 0;
@@ -13,7 +15,7 @@ IS
         SELECT CONCAT('R', r.riderId) AS riderId, r.riderName,
                TO_CHAR(TO_DATE(EXTRACT(MONTH FROM o.orderDate),'mm'), 'MONTH') AS month, 
                COUNT(o.orderId) AS Total_Orders_Delivered,
-               AVG((o.receivedTime - o.estimatedTime)*24*60) as AvgTimeTaken
+               ROUND(AVG((o.receivedTime - o.estimatedTime)*24*60)) as AvgTimeTaken
         FROM orders o, riders r
         WHERE o.riderId = r.riderId AND
               EXTRACT(YEAR FROM o.orderDate) = IN_Year AND
@@ -78,7 +80,7 @@ BEGIN
                                 RPAD(Report_rec.riderName, 30, ' ')|| 
                                 RPAD(Report_rec.month, 11, ' ')|| 
                                 LPAD(Report_rec.Total_Orders_Delivered, 13,' ')|| 
-                                LPAD(TO_CHAR(Report_rec.AvgTimeTaken, 999.99), 30,' '));
+                                LPAD(TO_CHAR(Report_rec.AvgTimeTaken, 999), 30,' '));
             v_break := 0;
             v_loop := v_loop + 1;
         ELSE
@@ -86,16 +88,28 @@ BEGIN
                                 RPAD(chr(13) , 41, ' ')|| 
                                 RPAD(Report_rec.month, 11, ' ')|| 
                                 LPAD(Report_rec.Total_Orders_Delivered, 13,' ')|| 
-                                LPAD(TO_CHAR(Report_rec.AvgTimeTaken, 999.99), 30,' '));
+                                LPAD(TO_CHAR(Report_rec.AvgTimeTaken, 999), 30,' '));
             v_loop := v_loop + 1;
         END IF;
 
         v_total_orders_delivered_year :=  v_total_orders_delivered_year + Report_rec.Total_Orders_Delivered;
+        V_avg_delivery_time := V_avg_delivery_time + Report_rec.AvgTimeTaken;
+
 
     END LOOP;
+
+    V_avg_delivery_time := V_avg_delivery_time/12;
+    IF V_avg_delivery_time >= 15 THEN
+        v_rider_status := 'BAD (More than 15 minutes)';
+    ELSE 
+        v_rider_status := 'GOOD (Less than 15 minutes)';
+    END IF;
+
     
     DBMS_OUTPUT.PUT_LINE(RPAD('           *', 51 ,'*')|| RPAD(' *',23,'*'));
     DBMS_OUTPUT.PUT_LINE(LPAD('Total Orders Delivered In Year ',45,' ')|| IN_Year || RPAD(' :', 10) ||LPAD(TO_CHAR(v_total_orders_delivered_year, 999), 5, ' ')||' Orders');
+    DBMS_OUTPUT.PUT_LINE(LPAD('Average Delivery Time In Year ',45,' ')|| IN_Year || RPAD(' :', 10) ||LPAD(TO_CHAR(V_avg_delivery_time, 999), 5, ' ')||' Minutes');
+    DBMS_OUTPUT.PUT_LINE(LPAD('Rider Status :',51,' ')|| LPAD(v_rider_status, 30, ' '));
     DBMS_OUTPUT.PUT_LINE(' ');
     DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',48,' ') ||'-END of REPORT-');
 
