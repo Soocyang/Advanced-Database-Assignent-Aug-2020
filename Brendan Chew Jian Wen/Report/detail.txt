@@ -81,14 +81,14 @@ BEGIN
             DBMS_OUTPUT.PUT_LINE( RPAD(REPORT_REC.STATE, 20, ' ')|| 
                                 RPAD(REPORT_REC.MONTH, 20, ' ')|| 
                                 RPAD(REPORT_REC.TOTAL_ORDERS, 20, ' ')|| 
-                                LPAD(CONCAT('RM', TO_CHAR(REPORT_REC.TOTAL_SALES, 999999.99)), 19,' '));
+                                LPAD(CONCAT('RM', TO_CHAR(REPORT_REC.TOTAL_SALES, '9,999,999.99')), 19,' '));
             V_BREAK := 0;
             V_ROWS := V_ROWS + 1;
         ELSE
             DBMS_OUTPUT.PUT_LINE(RPAD(' ', 20, ' ')|| 
                                 RPAD(REPORT_REC.MONTH , 20, ' ')|| 
                                 RPAD(REPORT_REC.TOTAL_ORDERS, 20, ' ')|| 
-                                LPAD(CONCAT('RM', TO_CHAR(REPORT_REC.TOTAL_SALES, 999999.99)), 19,' '));
+                                LPAD(CONCAT('RM', TO_CHAR(REPORT_REC.TOTAL_SALES, '9,999,999.99')), 19,' '));
 
             V_ROWS := V_ROWS + 1;
         END IF;
@@ -106,7 +106,7 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE(RPAD(' ', 20, ' ')|| 
                          RPAD('Total', 20, ' ')|| 
                          RPAD(V_TOTAL_ORDERS, 20, ' ')|| 
-                         LPAD(CONCAT('RM', TO_CHAR(V_TOTAL_SALES, 9999999.99)), 19,' '));
+                         LPAD(CONCAT('RM', TO_CHAR(V_TOTAL_SALES, '9,999,999.99')), 19,' '));
 
     DBMS_OUTPUT.PUT_LINE(' ');
 

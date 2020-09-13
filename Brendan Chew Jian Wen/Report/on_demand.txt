@@ -94,7 +94,7 @@ BEGIN
 
         DBMS_OUTPUT.PUT_LINE( RPAD(REPORT_REC.PAYMENT_METHOD, 30, ' ')|| 
                               LPAD(' ', 30, ' ')||
-                              LPAD(REPORT_REC.PAYMENT_COUNT, 29, ' '));
+                              LPAD(TO_CHAR(REPORT_REC.PAYMENT_COUNT, '999,999'), 29, ' '));
         
         V_ROWS := V_ROWS + 1;
 
@@ -110,7 +110,7 @@ BEGIN
                     
             DBMS_OUTPUT.PUT_LINE( RPAD(' ', 30, ' ')||
                                   RPAD(REPORT_REC_2.STATE, 30, ' ')||
-                                  LPAD(REPORT_REC_2.STATE_COUNT, 29, ' '));
+                                  LPAD(TO_CHAR(REPORT_REC_2.STATE_COUNT, '999,999'), 29, ' '));
 
             V_ROWS := V_ROWS + 1;
 
@@ -135,7 +135,7 @@ BEGIN
 
     DBMS_OUTPUT.PUT_LINE(RPAD(' ', 29 ,' ')||' '||
                          LPAD('Total Orders :',29,' ')||
-                         LPAD(TO_CHAR(V_TOTALORDERS, 99999), 30, ' '));
+                         LPAD(TO_CHAR(V_TOTALORDERS, '999,999'), 30, ' '));
     DBMS_OUTPUT.PUT_LINE(' ');
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'-End Of Report-');
 

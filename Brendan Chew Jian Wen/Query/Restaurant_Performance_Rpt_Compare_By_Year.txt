@@ -23,16 +23,16 @@ ACCEPT v_Year2   DATE   FORMAT 'YYYY'   PROMPT 'Enter value 2nd Year format(YYYY
 TTITLE CENTER 'RESTAURANT PERFORMANCE REPORT - TOTAL ORDERS AND SALES COMPARISON BY YEARS' -
 RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 1 -
 CENTER ==========================================================================  SKIP 2 -
-LEFT '                RESTAURANT INFORMATION                          YEAR &v_Year1                YEAR &v_Year2' SKIP 1
+LEFT '                      RESTAURANT INFORMATION                          YEAR &v_Year1                YEAR &v_Year2' SKIP 1
 
-COLUMN restaurant_ID FORMAT a5 HEADING 'R_ID'
+COLUMN restaurant_ID FORMAT a10 HEADING 'R_ID'
 COLUMN restaurantName FORMAT a50 HEADING 'Restaurant Name'
 COLUMN Year_1_TOTAL_ORDERS FORMAT  9999999 HEADING 'Total Orders'
 COLUMN Year_1_TOTAL_SALES FORMAT 9999999.99 HEADING 'Total Sales'
 COLUMN Year_2_TOTAL_ORDERS FORMAT 9999999 HEADING 'Total Orders'
 COLUMN Year_2_TOTAL_SALES FORMAT 9999999.99 HEADING 'Total Sales'
 
-SELECT  CONCAT('R', r.restaurantId) AS restaurant_ID, 
+SELECT  CONCAT('RES', r.restaurantId) AS restaurant_ID, 
         r.restaurantName, 
         v1.TOTAL_ORDER AS Year_1_TOTAL_ORDERS, 
         v1.TOTAL_SALES AS Year_1_TOTAL_SALES,
