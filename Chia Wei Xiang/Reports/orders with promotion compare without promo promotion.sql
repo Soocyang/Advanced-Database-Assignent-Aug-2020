@@ -1,0 +1,102 @@
+CREATE OR REPLACE PROCEDURE report_strategic(IN_Year IN VARCHAR)
+IS
+
+    v_totalvalue     number := 0;
+    v_totalvaluewithoutp     number := 0;
+    v_percent     number := 0;
+
+    v_pageCount     number := 1;
+    V_loop          number := 0;
+    v_break         number := 1;
+    e_invalidInput  EXCEPTION;
+    e_invalidYear    EXCEPTION;
+
+    CURSOR Report_Cursor IS
+        SELECT v1.month, v1.TOTAL_SALES AS Promo_sales, v2.TOTAL_SALES AS Without_promo
+            , (((v2.TOTAL_SALES-v1.TOTAL_SALES)/v1.TOTAL_SALES)*100) AS DIFF
+        FROM v_promo_sales1 v1, v_promo_sales2 v2
+        WHERE v1.month = v2.month AND
+            v1.year = v2.year AND
+            v1.year = IN_Year AND
+            v2.year = IN_Year
+        ORDER BY to_char(to_date(v1.Month,'MONTH'),'MM');
+
+    Report_rec Report_Cursor%ROWTYPE;
+
+BEGIN
+    -- INPUT VALIDATION
+        IF (IS_NUMBER(IN_Year) = 0) THEN
+        raise e_invalidInput;
+    ELSE
+        IF ((IN_Year > TO_CHAR(sysdate,'yyyy'))) THEN
+            raise e_invalidYear;
+        END IF;
+    END IF;
+
+    -- REPORT HEADER
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',48,' ') ||'SUMNMARY REPORT');
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',20,' ') ||'CUSTOMERS REPORT - SALES WITH PROMOTION AND SALES WITHOUT PROMOTION OF '||IN_Year);
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',20,' ') || LPAD('=',75,'='));
+
+    -- OPEN QUERY 
+    OPEN Report_Cursor;
+    LOOP
+    FETCH Report_Cursor into Report_rec;            -- FETCH RECORDS
+    EXIT WHEN Report_Cursor%NOTFOUND;
+
+        -- PRINT PAGES BY PAGES
+        IF(v_loop = 0 OR v_loop = 20) THEN
+            DBMS_OUTPUT.PUT_LINE(' ');
+            DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
+                                RPAD(TO_CHAR(sysdate,'dd/mm/yyyy'), 10, ' ')||
+                                LPAD(' ', 70, ' ')||
+                                'Page: '||LPAD(v_pageCount, 2, ' '));
+
+         -- COLUMNS HEADERS
+            DBMS_OUTPUT.PUT_LINE(CHR(10));
+            DBMS_OUTPUT.PUT_LINE(RPAD('Month', 20, ' ')||
+                                    RPAD('Sales with Promotion', 20, ' ')||
+                                    RPAD('Sales without Promotion', 25,' ')||
+                                    RPAD('Different(%)', 13,' '));
+
+            -- COLUMNS SEPERATOR 
+            DBMS_OUTPUT.PUT_LINE(RPAD('=', 19 ,'=')||' '||
+                                RPAD('=', 19 ,'=')||' '||
+                                RPAD('=', 24 ,'=')||' '||
+                                RPAD('=', 12 ,'=')||' ');
+            v_loop := 0;
+            v_pageCount := v_pageCount + 1;
+
+        END IF;
+
+        -- PRINT RECORD
+            DBMS_OUTPUT.PUT_LINE( RPAD(Report_rec.month, 20, ' ')|| 
+                                RPAD('RM'||TO_CHAR(Report_rec.Promo_sales, 999999.99), 20, ' ')|| 
+                                RPAD('RM'||TO_CHAR(Report_rec.Without_promo, 999999.99), 25, ' ')|| 
+                                RPAD(TO_CHAR(Report_rec.DIFF, 999.99), 10,' ') || '%');
+            v_loop := v_loop + 1;
+
+    v_totalvalue := v_totalvalue + Report_rec.Promo_sales;
+    v_totalvaluewithoutp := v_totalvaluewithoutp + Report_rec.Without_promo;
+    v_percent := ((v_totalvaluewithoutp-v_totalvalue)/v_totalvalue)*100;
+    -- (((v2.TOTAL_SALES-v1.TOTAL_SALES)/v1.TOTAL_SALES)*100) AS DIFF
+
+    END LOOP;
+    
+    DBMS_OUTPUT.PUT_LINE(RPAD(' *',20,'*')||RPAD(' *',20,'*')||RPAD(' *',25,'*')||RPAD(' *',13,'*'));
+    DBMS_OUTPUT.PUT_LINE('Total Value: '||LPAD(' ',7,' ')||RPAD('RM '||TO_CHAR(v_totalvalue, 999999.99), 15, ' ')||LPAD(' ',5,' ')||RPAD('RM '||TO_CHAR(v_totalvaluewithoutp, 999999.99), 15, ' ')||LPAD(' ',10,' ')||RPAD(TO_CHAR(v_percent, 999.99), 10, ' ')|| '%');
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',48,' ') ||'-END of REPORT-');
+
+EXCEPTION
+        WHEN e_invalidYear THEN
+            DBMS_OUTPUT.PUT_LINE('Invalid  Input: Input year cannot be future year.');
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Error Found. Please contact your Database Administrator');
+
+END;
+/
+
+exec report_strategic(2017);
+
+
