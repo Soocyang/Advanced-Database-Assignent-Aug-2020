@@ -1,0 +1,101 @@
+CREATE OR REPLACE PROCEDURE insert_order_Details(IN_ORDERID IN NUMBER, IN_MENUID IN NUMBER, IN_QUANTITYORDERED IN NUMBER) IS
+-- check food menu must all from the same restaurant / cannot from different restaurant with same order id
+v_restaurantId  restaurant.restaurantID%TYPE;
+vm_restaurantId restaurant.restaurantID%TYPE;
+v_orderId orderDetails.orderId%TYPE;
+v_priceeach menu.price%TYPE;
+v_rest_flag numeric;
+
+RESTAURANT_NOT_EXIST EXCEPTION;
+RESTAURANT_NOT_ALLOWED EXCEPTION;
+MENU_NOT_EXIST EXCEPTION;
+
+CURSOR REST_CURSOR IS
+SELECT  m.restaurantId
+    FROM menu m, orderDetails od 
+    WHERE m.menuId = od.menuId 
+    AND od.orderId = IN_ORDERID
+    GROUP BY  m.restaurantId;
+
+-- verify existong order detail to get the restaurant 
+-- if yes --get and verify restaurant
+-- if no -->direct insert
+BEGIN
+    v_rest_flag := 0;
+    -- SELECT m.restaurantId
+    --      FROM menu m, orderDetails od WHERE m.menuId = od.menuId AND od.orderId = '100003'
+    --      GROUP BY  m.restaurantId;
+    -- test1
+    SELECT restaurantId, price INTO v_restaurantId, v_priceeach
+    FROM menu
+    WHERE menuId = IN_MENUID;
+
+        -- SELECT restaurantId
+        -- FROM menu
+        -- WHERE menuId = '1001';
+    -- work
+        --  SELECT m.restaurantId INTO v_restaurantId
+        --  FROM menu m, orderDetails od 
+        --  WHERE m.menuId = od.menuId 
+        --  AND od.orderId = IN_ORDERID
+        --  GROUP BY  m.restaurantId;
+
+    DBMS_OUTPUT.PUT_LINE (chr(10));
+    DBMS_OUTPUT.PUT_LINE ('Order List Detail ' ); 
+    DBMS_OUTPUT.PUT_LINE ('===========================');   
+    DBMS_OUTPUT.PUT_LINE ('Order ID : ' || IN_ORDERID);    
+    DBMS_OUTPUT.PUT_LINE ('MENU ID : ' || IN_MENUID);
+    DBMS_OUTPUT.PUT_LINE ('QUANTITY ORDERED : ' || IN_QUANTITYORDERED);
+    DBMS_OUTPUT.PUT_LINE ('PRICE EACH : ' || v_priceeach); 
+
+    OPEN REST_CURSOR;
+    LOOP 
+    -- the only restaurant allowed
+        FETCH REST_CURSOR INTO vm_restaurantId;
+        EXIT WHEN REST_CURSOR%NOTFOUND;
+        --if the insert restuarant is inside the menu
+        IF vm_restaurantId = v_restaurantId THEN 
+           v_rest_flag := 1;
+        ELSE 
+           RAISE RESTAURANT_NOT_ALLOWED;
+        END IF;
+    END LOOP;
+    CLOSE REST_CURSOR;
+
+    IF v_rest_flag = 1 THEN
+        insert into orderDetails values(IN_ORDERID,IN_MENUID,IN_QUANTITYORDERED,v_priceeach);
+        DBMS_OUTPUT.PUT_LINE (chr(10));
+        DBMS_OUTPUT.PUT_LINE ('New food menu id has been added to old order id ');    
+    END IF;  
+
+    BEGIN
+         SELECT orderId INTO v_orderId
+         FROM orderDetails
+         WHERE orderId = IN_ORDERID
+         GROUP BY orderId;
+    EXCEPTION
+         WHEN NO_DATA_FOUND THEN
+            insert into orderDetails values(IN_ORDERID,IN_MENUID,IN_QUANTITYORDERED,v_priceeach);
+            DBMS_OUTPUT.PUT_LINE (chr(10));
+        DBMS_OUTPUT.PUT_LINE ('New order has been added');
+    END;
+
+    EXCEPTION
+        WHEN RESTAURANT_NOT_ALLOWED THEN
+            raise_application_error (-20016,'Only allow to add menu that same with previous restaurant.');
+        WHEN DUP_VAL_ON_INDEX THEN
+            raise_application_error (-20017,'You have tried to insert a same menu id.');
+        WHEN NO_DATA_FOUND THEN
+            raise_application_error (-20018,'No records found for the order id.');
+        WHEN OTHERS THEN
+            raise_application_error (-20020,'An error has occurred when inserting the order detail. Please contact administrator');
+        END;
+/
+
+-- exec insert_order_Details(100001, 1001, 2);
+
+-- SELECT *
+-- FROM orderDetails
+-- WHERE orderId='100001';
+
+

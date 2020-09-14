@@ -1,0 +1,96 @@
+-- input orders details, orders, Check Promo Code/ Expiry date, 
+-- check customer with payment method of credits need verify,
+-- Sum automatically the subtotal with the delivery fees,
+CREATE OR REPLACE PROCEDURE insert_orders(IN_CUSTOMERID IN NUMBER, IN_PROMOID IN NUMBER, IN_RIDERID IN NUMBER, 
+                    IN_PAYMENTMETHOD IN VARCHAR, IN_DELIVERYFEES IN NUMBER, IN_ORDERDATE IN VARCHAR,
+                    IN_STATUS IN VARCHAR, IN_ESTIMATEDTIME IN VARCHAR, IN_RECEIVEDTIME IN VARCHAR) IS
+   
+    temp_count number(6); 
+    subtotal number(6);
+    v_customerId customers.customerId%TYPE;
+    v_promoId promotion.promoId%TYPE;
+    v_expiryDate promotion.expiryDate%TYPE;
+    v_riderId riders.riderId%TYPE;
+
+    order_date DATE;
+    estimated_time DATE;
+    received_time DATE;
+
+    PAYMENTMETHOD_NOT_ALLOWED EXCEPTION;
+    PROMOCODE_NOT_ALLOWED EXCEPTION;
+
+BEGIN
+    SELECT MAX(orderID) INTO temp_count
+   	FROM orders;
+    temp_count := temp_count +1;
+
+    SELECT expiryDate INTO v_expiryDate
+    FROM promotion 
+    WHERE promoId = IN_PROMOID;
+
+-- payment menthod
+    IF IN_PAYMENTMETHOD != 'E-wallet' AND 
+    IN_PAYMENTMETHOD != 'Online Banking' AND 
+    IN_PAYMENTMETHOD != 'Credit or Debit Card' AND 
+    IN_PAYMENTMETHOD != 'In-App Credits' THEN
+        RAISE PAYMENTMETHOD_NOT_ALLOWED;
+    END IF; 
+
+    order_date := TO_DATE(IN_ORDERDATE, 'DD/MM/YYYY');
+    estimated_time := TO_DATE(IN_ESTIMATEDTIME, 'DD/MM/YYYY HH24:MI:SS');
+    received_time := TO_DATE(IN_RECEIVEDTIME, 'DD/MM/YYYY HH24:MI:SS');
+
+    IF order_date > v_expiryDate THEN
+        RAISE PROMOCODE_NOT_ALLOWED;
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE (chr(10));
+    DBMS_OUTPUT.PUT_LINE ('Order Details ');    
+    DBMS_OUTPUT.PUT_LINE ('================================');    
+    DBMS_OUTPUT.PUT_LINE ('Order ID : ' || temp_count);    
+    DBMS_OUTPUT.PUT_LINE ('Customer ID : ' || IN_CUSTOMERID);
+    DBMS_OUTPUT.PUT_LINE ('Promo ID : ' || IN_PROMOID);
+    DBMS_OUTPUT.PUT_LINE ('Rider ID : ' || IN_RIDERID);   
+    DBMS_OUTPUT.PUT_LINE ('Payment Method : ' || IN_PAYMENTMETHOD);   
+    DBMS_OUTPUT.PUT_LINE ('Delivery Fee : ' || IN_DELIVERYFEES); 
+    DBMS_OUTPUT.PUT_LINE ('Order Date : ' || IN_ORDERDATE); 
+    DBMS_OUTPUT.PUT_LINE ('Status : ' || IN_STATUS); 
+    DBMS_OUTPUT.PUT_LINE ('Estimated Time : ' || IN_ESTIMATEDTIME); 
+    DBMS_OUTPUT.PUT_LINE ('Recieved Time : ' || IN_RECEIVEDTIME); 
+
+    insert into orders values(temp_count, IN_CUSTOMERID, IN_PROMOID, IN_RIDERID, IN_DELIVERYFEES,
+    IN_PAYMENTMETHOD, IN_DELIVERYFEES, order_date, IN_STATUS, estimated_time, received_time);
+
+    DBMS_OUTPUT.PUT_LINE (chr(10));
+    DBMS_OUTPUT.PUT_LINE ('Order has been successfuly added: ');
+
+    EXCEPTION
+        WHEN PAYMENTMETHOD_NOT_ALLOWED THEN
+            raise_application_error (-20011,'This payment method is not allowed.');
+        WHEN NO_DATA_FOUND THEN
+            raise_application_error (-20012,'This Customer/Rider/Promo ID doesnt exist');
+        WHEN PROMOCODE_NOT_ALLOWED THEN
+            raise_application_error (-20013,'This Promotion ID is expired');
+        WHEN OTHERS THEN
+            IF SQLCODE = -2291 THEN
+                raise_application_error (-20014,'This Customer/Rider/Promo ID doesnt exist');
+            ELSE
+                raise_application_error (-20015,'An error has occurred when inserting the order. Please contact administrator');
+            END IF;
+
+END;
+/
+
+-- exec insert_orders(1200,1024,1011,'E-wallet',3.9,'06/11/2019','Cancelled','06/11/2019 20:59:23','06/11/2019 21:18:23');
+
+-- test
+    -- SELECT MAX(orderID) 
+   	-- FROM orderDetails;
+
+    -- SELECT *
+    -- FROm orders
+    -- WHERE orderid='128807';
+
+    -- SELECT SUM(quantityOrdered*priceEach) INTO subtotal
+    -- FROM orderDetails
+    -- WHERE orderID = temp_count;
