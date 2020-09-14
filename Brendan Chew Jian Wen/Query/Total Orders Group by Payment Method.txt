@@ -1,28 +1,36 @@
-ACCEPT v_fromDate DATE   FORMAT 'DD/MM/YYYY'   PROMPT 'Enter value for from date format(DD/MM/YYYY): '
-ACCEPT v_toDate   DATE   FORMAT 'DD/MM/YYYY'   PROMPT 'Enter value for to date format(DD/MM/YYYY): '
+ACCEPT V_FROMDATE DATE   FORMAT 'DD/MM/YYYY'   PROMPT 'Enter value for from date format(DD/MM/YYYY): '
+ACCEPT V_TODATE   DATE   FORMAT 'DD/MM/YYYY'   PROMPT 'Enter value for to date format(DD/MM/YYYY): '
 
-TTITLE CENTER 'Total Orders Group by Payment Method' SKIP 1 -
-CENTER 'FROM &v_fromDate TO &v_toDate' SKIP 1 -
-CENTER ===========================================================  SKIP 1 -
-RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 2 -
+TTITLE CENTER 'Total Orders Group by Payment Method' SKIP -
+CENTER        'From &V_FROMDATE TO &V_TODATE' SKIP -
+CENTER        '====================================' -
+RIGHT         'Page: ' FORMAT 999 SQL.PNO -
 
-COLUMN payment_method FORMAT a20 HEADING 'Payment Method'
-COLUMN payment_count FORMAT 99999 HEADING 'Payment Count'
+COLUMN PAYMENTMETHOD FORMAT a20          HEADING 'Payment Method'
+COLUMN STATE         FORMAT a30          HEADING 'State'
+COLUMN PAYMENT_COUNT FORMAT 99,999       HEADING 'Payment Count'
+COLUMN TOTAL_SALES   FORMAT 9,999,999.99 HEADING 'Total Sales'
+BREAK ON PAYMENTMETHOD SKIP 1
 
-BREAK ON payment_method SKIP 1
+SELECT PAYMENTMETHOD, 
+       C.STATE,
+       COUNT(PAYMENTMETHOD) PAYMENT_COUNT,
+       SUM(O.SUBTOTAL) TOTAL_SALES
+FROM ORDERS O,
+     CUSTOMERS C 
+WHERE O.CUSTOMERID = C.CUSTOMERID
+  AND ORDERDATE BETWEEN TO_DATE('&V_FROMDATE', 'DD/MM/YYYY')
+                    AND TO_DATE('&V_TODATE'  , 'DD/MM/YYYY')
+GROUP BY PAYMENTMETHOD, 
+         C.STATE 
+ORDER BY PAYMENTMETHOD DESC, 
+         PAYMENT_COUNT DESC;
 
-SELECT PAYMENTMETHOD as payment_method, c.STATE , COUNT(PAYMENTMETHOD) as payment_count
-FROM ORDERS o, CUSTOMERS c 
-WHERE ORDERDATE BETWEEN TO_DATE('&v_fromDate', 'DD/MM/YYYY') AND TO_DATE('&v_toDate', 'DD/MM/YYYY')
-AND o.CUSTOMERID = c.CUSTOMERID
-GROUP BY PAYMENTMETHOD, c.STATE 
-ORDER BY payment_method DESC, payment_count DESC;
-
-COLUMN payment_method CLEAR
-COLUMN payment_count CLEAR
+COLUMN PAYMENTMETHOD CLEAR
+COLUMN PAYMENT_COUNT CLEAR
 CLEAR BREAKS
 TTITLE OFF
 
 -- TEST DATA
--- v_fromDate: 01/01/2017
--- v_toDate: 31/12/2017
+-- V_FROMDATE: 01/01/2017
+-- V_TODATE: 31/12/2017

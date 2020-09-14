@@ -1,41 +1,40 @@
--- Logic
+-- LOGIC
 -- CUST | ORDER.ORDERDATE |
 -- STATE | MONTH  | TOTAL ORDER | TOTAL SALES AMOUNT 
 
-ACCEPT v_state CHAR PROMPT 'Enter value for State: '
-ACCEPT v_Year  DATE FORMAT 'YYYY'   PROMPT 'Enter value Year format(YYYY): '
+ACCEPT V_STATE CHAR PROMPT 'Enter Value For State: '
+ACCEPT V_YEAR  DATE FORMAT 'YYYY'   PROMPT 'Enter Value Year Format(Yyyy): '
 
-TTITLE CENTER 'Total Orders and Sales Report on Year &v_Year in &v_state ' - 
-RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 1 -
-CENTER =========================================================================  SKIP 2 -
+TTITLE CENTER 'Total Orders And Sales Report On Year &V_year In &V_state ' SKIP - 
+       CENTER '============================================================' -
+       RIGHT  'Page: ' FORMAT 999 SQL.PNO SKIP -
 
-COLUMN state FORMAT a30 HEADING 'State'
-COLUMN Month FORMAT a30 HEADING 'Month'
-COLUMN total_orders FORMAT 99999 HEADING '   Total Orders'
-COLUMN total_sales FORMAT a15 HEADING '   Total Sales'
-BREAK ON state
+COLUMN STATE        FORMAT A30          HEADING 'State'
+COLUMN MONTH        FORMAT A15          HEADING 'Month'
+COLUMN TOTAL_ORDERS FORMAT 99,999       HEADING 'Total Orders'
+COLUMN TOTAL_SALES  FORMAT 9,999,990.99 HEADING 'Total Sales (RM)'
+BREAK ON STATE
 
-SELECT  r.state, 
-        TO_CHAR(TO_DATE(EXTRACT(MONTH FROM o.orderDate),'mm'), 'MONTH') AS Month,
-        COUNT(o.orderId) total_orders,
-        CONCAT('   RM', TO_CHAR(SUM(o.subtotal), 999999.99)) total_sales
-FROM    restaurant r, menu m, orderDetails od, orders o 
-WHERE   r.restaurantId = m.restaurantId AND
-        m.menuId = od.menuId AND
-        od.orderId = o.orderId AND
-        EXTRACT(YEAR FROM o.orderDate) = '&v_Year' AND
-        r.state = '&v_state'
-GROUP BY r.state, EXTRACT(MONTH FROM o.orderDate)
-ORDER BY EXTRACT(MONTH FROM o.orderDate);
+SELECT R.STATE, 
+       TO_CHAR(TO_DATE(EXTRACT(MONTH FROM O.ORDERDATE),'MM'), 'Month') AS MONTH,
+       COUNT(O.ORDERID) TOTAL_ORDERS,
+       SUM(O.SUBTOTAL) TOTAL_SALES
+FROM RESTAURANT R, 
+     MENU M, 
+     ORDERDETAILS OD, 
+     ORDERS O 
+WHERE R.RESTAURANTID = M.RESTAURANTID 
+  AND M.MENUID       = OD.MENUID 
+  AND OD.ORDERID     = O.ORDERID 
+  AND EXTRACT(YEAR FROM O.ORDERDATE) = '&V_YEAR' 
+  AND R.STATE        = '&V_STATE'
+GROUP BY R.STATE, EXTRACT(MONTH FROM O.ORDERDATE)
+ORDER BY EXTRACT(MONTH FROM O.ORDERDATE);
 
 CLEAR COLUMNS
 CLEAR BREAKS
 TTITLE OFF
 
 -- TEST DATA 
--- Kuala Lumpur
+-- KUALA LUMPUR
 -- 2017
-
-
-
-

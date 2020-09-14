@@ -1,54 +1,50 @@
+CREATE OR REPLACE VIEW VIEWS_TOTALORDERS_SALES_RESTAURANT_BY_YEAR AS
+      SELECT R.RESTAURANTID,
+             R.RESTAURANTNAME,
+             EXTRACT(YEAR FROM O.ORDERDATE) YEAR,
+             COUNT(O.ORDERID) TOTAL_ORDER,
+             SUM(O.SUBTOTAL) TOTAL_SALES
+      FROM RESTAURANT R,
+           MENU M,
+           ORDERDETAILS OD,
+           ORDERS O
+      WHERE R.RESTAURANTID = M.RESTAURANTID 
+        AND M.MENUID       = OD.MENUID 
+        AND OD.ORDERID     = O.ORDERID
+      GROUP BY R.RESTAURANTID, R.RESTAURANTNAME, EXTRACT(YEAR FROM O.ORDERDATE)
+      ORDER BY R.RESTAURANTID, YEAR;
 
--- RESTAURANT_ID | R_NAME | TOTAL_ORDER COUNT(*) | TOTAL_SALES SUM( RM Subtotal)
+ACCEPT V_YEAR1   DATE     FORMAT 'YYYY'     PROMPT 'Enter value 1st Year (YYYY) : '
+ACCEPT V_YEAR2   DATE     FORMAT 'YYYY'     PROMPT 'Enter value 2nd Year (YYYY) : '
+ACCEPT V_AMOUNT  NUMBER   FORMAT 9999999.99 PROMPT 'Enter minimum sales amount  : '
 
--- ===========CREATE VIEWS================
-CREATE OR REPLACE VIEW views_TotalOrders_Sales_Restaurant_by_year AS
-      SELECT r.restaurantid, r.restaurantName, EXTRACT(YEAR FROM o.orderDate) year, count(o.orderId) TOTAL_ORDER, sum(o.Subtotal) TOTAL_SALES
-      FROM restaurant r, menu m, orderDetails od, orders o 
-      WHERE r.restaurantId = m.restaurantId AND
-              m.menuId = od.menuId AND
-              od.orderId = o.orderId
-      GROUP BY r.restaurantid, r.restaurantName, EXTRACT(YEAR FROM o.orderDate)
-      ORDER BY r.restaurantid, year;
--- ========================================
--- Test Views
--- COLUMN restaurantName FORMAT a45
--- select * from views_TotalOrders_Sales_Restaurant_by_year;
--- CLEAR COLUMNS
+TTITLE CENTER 'RESTAURANT PERFORMANCE REPORT' SKIP -
+CENTER        'TOTAL ORDERS AND SALES BY &V_YEAR1 AND &V_YEAR2' SKIP -
+CENTER        'MINIMUM SALES AMOUNT RM&V_AMOUNT' SKIP -
+CENTER        '=======================================' -
+RIGHT         'Page: ' FORMAT 999 SQL.PNO SKIP 1 -
+LEFT '                      RESTAURANT INFORMATION                          YEAR &V_YEAR1                  YEAR &V_YEAR2' SKIP 1
 
---===============CREATE QUERY=============
-ACCEPT v_Year1   DATE   FORMAT 'YYYY'   PROMPT 'Enter value 1st Year format(YYYY): '
-ACCEPT v_Year2   DATE   FORMAT 'YYYY'   PROMPT 'Enter value 2nd Year format(YYYY): '
+COLUMN restaurant_ID       FORMAT a10          HEADING 'R_ID'
+COLUMN restaurantName      FORMAT a50          HEADING 'Restaurant Name'
+COLUMN Year_1_TOTAL_ORDERS FORMAT 9,999,999    HEADING 'Total Orders'
+COLUMN Year_1_TOTAL_SALES  FORMAT 9,999,999.99 HEADING 'Total Sales'
+COLUMN Year_2_TOTAL_ORDERS FORMAT 9,999,999    HEADING 'Total Orders'
+COLUMN Year_2_TOTAL_SALES  FORMAT 9,999,999.99 HEADING 'Total Sales'
 
-TTITLE CENTER 'RESTAURANT PERFORMANCE REPORT - TOTAL ORDERS AND SALES COMPARISON BY YEARS' -
-RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 1 -
-CENTER ==========================================================================  SKIP 2 -
-LEFT '                      RESTAURANT INFORMATION                          YEAR &v_Year1                YEAR &v_Year2' SKIP 1
-
-COLUMN restaurant_ID FORMAT a10 HEADING 'R_ID'
-COLUMN restaurantName FORMAT a50 HEADING 'Restaurant Name'
-COLUMN Year_1_TOTAL_ORDERS FORMAT  9999999 HEADING 'Total Orders'
-COLUMN Year_1_TOTAL_SALES FORMAT 9999999.99 HEADING 'Total Sales'
-COLUMN Year_2_TOTAL_ORDERS FORMAT 9999999 HEADING 'Total Orders'
-COLUMN Year_2_TOTAL_SALES FORMAT 9999999.99 HEADING 'Total Sales'
-
-SELECT  CONCAT('RES', r.restaurantId) AS restaurant_ID, 
-        r.restaurantName, 
-        v1.TOTAL_ORDER AS Year_1_TOTAL_ORDERS, 
-        v1.TOTAL_SALES AS Year_1_TOTAL_SALES,
-        v2.TOTAL_ORDER AS Year_2_TOTAL_ORDERS,
-        v2.TOTAL_SALES AS Year_2_TOTAL_SALES
-FROM    restaurant r, 
-        views_TotalOrders_Sales_Restaurant_by_year v1,
-        views_TotalOrders_Sales_Restaurant_by_year v2
-WHERE   (r.restaurantId = v1.restaurantId) AND
-        (v1.year = '&v_Year1') AND
-        (r.restaurantId = v2.restaurantId) AND
-        (v2.year = '&v_Year2') 
+SELECT CONCAT('RE', v1.RESTAURANTID) AS restaurant_ID, 
+       v1.RESTAURANTNAME, 
+       v1.TOTAL_ORDER AS Year_1_TOTAL_ORDERS, 
+       v1.TOTAL_SALES AS Year_1_TOTAL_SALES,
+       v2.TOTAL_ORDER AS Year_2_TOTAL_ORDERS,
+       v2.TOTAL_SALES AS Year_2_TOTAL_SALES
+FROM views_TotalOrders_Sales_Restaurant_by_year v1,
+     views_TotalOrders_Sales_Restaurant_by_year v2
+WHERE v1.restaurantId = v2.restaurantId 
+  AND v1.year         = '&V_YEAR1'
+  AND v2.year         = '&V_YEAR2'
+  AND v1.TOTAL_SALES >= &V_AMOUNT 
+  AND v2.TOTAL_SALES >= &V_AMOUNT
 ORDER BY restaurant_ID;
 CLEAR COLUMNS
 TTITLE OFF
-
-
-
---============================
