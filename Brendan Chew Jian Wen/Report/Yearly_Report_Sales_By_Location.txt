@@ -2,8 +2,11 @@ CREATE OR REPLACE PROCEDURE YEARLY_REPORT_SALES_BY_LOCATION_DETAILRPT(
     IN_STATE IN VARCHAR,
     IN_YEAR IN VARCHAR)
 IS
-    V_TOTAL_ORDERS NUMBER := 0;
-    V_TOTAL_SALES NUMBER  := 0;
+    V_TOTAL_ORDERS  NUMBER := 0;
+    V_TOTAL_SALES   NUMBER := 0;
+    V_AVG_SALES     NUMBER := 0;
+    V_HIGHEST_SALES NUMBER := 0;
+    V_HIGH_MONTH    VARCHAR(20);
 
     V_PAGE          NUMBER := 1;
     V_ROWS          NUMBER := 0;
@@ -13,16 +16,20 @@ IS
 
     CURSOR REPORT_CURSOR IS
 
-        SELECT  R.STATE, 
-                TO_CHAR(TO_DATE(EXTRACT(MONTH FROM O.ORDERDATE),'MM'), 'MONTH') AS MONTH,
-                COUNT(O.ORDERID) TOTAL_ORDERS,
-                SUM(O.SUBTOTAL) TOTAL_SALES
-        FROM    RESTAURANT R, MENU M, ORDERDETAILS OD, ORDERS O 
-        WHERE   R.RESTAURANTID = M.RESTAURANTID AND
-                M.MENUID = OD.MENUID AND
-                OD.ORDERID = O.ORDERID AND
-                EXTRACT(YEAR FROM O.ORDERDATE) = IN_YEAR AND
-                R.STATE = IN_STATE
+        SELECT R.STATE, 
+               TO_CHAR(TO_DATE(EXTRACT(MONTH FROM O.ORDERDATE),'MM'), 'Month') AS MONTH,
+               COUNT(O.ORDERID) TOTAL_ORDERS,
+               SUM(O.SUBTOTAL) TOTAL_SALES,
+               AVG(O.SUBTOTAL) AVG_SALES
+        FROM RESTAURANT R,
+             MENU M,
+             ORDERDETAILS OD,
+             ORDERS O 
+        WHERE R.RESTAURANTID = M.RESTAURANTID
+          AND M.MENUID       = OD.MENUID
+          AND OD.ORDERID     = O.ORDERID
+          AND EXTRACT(YEAR FROM O.ORDERDATE) = IN_YEAR
+          AND R.STATE        = IN_STATE
         GROUP BY R.STATE, EXTRACT(MONTH FROM O.ORDERDATE)
         ORDER BY EXTRACT(MONTH FROM O.ORDERDATE);
 
@@ -63,53 +70,68 @@ BEGIN
             -- COLUMNS HEADERS
             DBMS_OUTPUT.PUT_LINE(CHR(10));
             DBMS_OUTPUT.PUT_LINE(RPAD('State', 20, ' ')||
-                                    RPAD('Month', 20, ' ') ||
-                                    RPAD('Total Orders', 20,' ')||
-                                    RPAD('Total Sales', 20,' '));
+                                 RPAD('Month', 20, ' ') ||
+                                 RPAD('Total Orders', 20,' ')||
+                                 RPAD('Total Sales (RM)', 20,' ')||
+                                 RPAD('Average Sales (RM)', 20,' '));
 
             -- COLUMNS SEPERATOR 
             DBMS_OUTPUT.PUT_LINE(RPAD('=', 19 ,'=')||' '||
-                                RPAD('=', 19 ,'=')||' '||
-                                RPAD('=', 19 ,'=')||' '||
-                                RPAD('=', 19 ,'=')||' ');
+                                 RPAD('=', 19 ,'=')||' '||
+                                 RPAD('=', 19 ,'=')||' '||
+                                 RPAD('=', 19 ,'=')||' '||
+                                 RPAD('=', 19 ,'=')||' ');
             V_ROWS := 0;
             V_PAGE := V_PAGE + 1;
         END IF;
 
         -- PRINT RECORD
         IF (V_BREAK = 1) THEN
-            DBMS_OUTPUT.PUT_LINE( RPAD(REPORT_REC.STATE, 20, ' ')|| 
-                                RPAD(REPORT_REC.MONTH, 20, ' ')|| 
-                                RPAD(REPORT_REC.TOTAL_ORDERS, 20, ' ')|| 
-                                LPAD(CONCAT('RM', TO_CHAR(REPORT_REC.TOTAL_SALES, '9,999,999.99')), 19,' '));
+            DBMS_OUTPUT.PUT_LINE(RPAD(REPORT_REC.STATE, 20, ' ')|| 
+                                 RPAD(REPORT_REC.MONTH, 20, ' ')|| 
+                                 LPAD(TO_CHAR(REPORT_REC.TOTAL_ORDERS, '9,999'), 19,' ')||' '||
+                                 LPAD(TO_CHAR(REPORT_REC.TOTAL_SALES, '9,999,999.99'), 19,' ')||' '||
+                                 LPAD(TO_CHAR(REPORT_REC.AVG_SALES, '9,999.99'), 19,' '));
             V_BREAK := 0;
             V_ROWS := V_ROWS + 1;
         ELSE
             DBMS_OUTPUT.PUT_LINE(RPAD(' ', 20, ' ')|| 
-                                RPAD(REPORT_REC.MONTH , 20, ' ')|| 
-                                RPAD(REPORT_REC.TOTAL_ORDERS, 20, ' ')|| 
-                                LPAD(CONCAT('RM', TO_CHAR(REPORT_REC.TOTAL_SALES, '9,999,999.99')), 19,' '));
+                                 RPAD(REPORT_REC.MONTH , 20, ' ')|| 
+                                 LPAD(TO_CHAR(REPORT_REC.TOTAL_ORDERS, '9,999'), 19,' ')||' '||
+                                 LPAD(TO_CHAR(REPORT_REC.TOTAL_SALES, '9,999,999.99'), 19,' ')||' '||
+                                 LPAD(TO_CHAR(REPORT_REC.AVG_SALES, '9,999.99'), 19,' '));
 
             V_ROWS := V_ROWS + 1;
         END IF;
 
+        IF (REPORT_REC.TOTAL_SALES > V_HIGHEST_SALES) THEN
+            V_HIGHEST_SALES := REPORT_REC.TOTAL_SALES;
+            V_HIGH_MONTH    := REPORT_REC.MONTH;
+        END IF;
+
         V_TOTAL_ORDERS :=  V_TOTAL_ORDERS + REPORT_REC.TOTAL_ORDERS;
-        V_TOTAL_SALES :=  V_TOTAL_SALES + REPORT_REC.TOTAL_SALES;
+        V_TOTAL_SALES  :=  V_TOTAL_SALES  + REPORT_REC.TOTAL_SALES;
+        V_AVG_SALES    :=  V_AVG_SALES    + REPORT_REC.AVG_SALES;
 
     END LOOP;
 
     DBMS_OUTPUT.PUT_LINE(RPAD('=', 19 ,'=')||' '||
                          RPAD('=', 19 ,'=')||' '||
                          RPAD('=', 19 ,'=')||' '||
+                         RPAD('=', 19 ,'=')||' '||
                          RPAD('=', 19 ,'=')||' ');
 
     DBMS_OUTPUT.PUT_LINE(RPAD(' ', 20, ' ')|| 
                          RPAD('Total', 20, ' ')|| 
-                         RPAD(V_TOTAL_ORDERS, 20, ' ')|| 
-                         LPAD(CONCAT('RM', TO_CHAR(V_TOTAL_SALES, '9,999,999.99')), 19,' '));
+                         LPAD(TO_CHAR(V_TOTAL_ORDERS, '999,999'), 19,' ')||' '||
+                         LPAD(TO_CHAR(V_TOTAL_SALES, '9,999,999.99'), 19,' '));
 
     DBMS_OUTPUT.PUT_LINE(' ');
-
+    DBMS_OUTPUT.PUT_LINE('Average order sales           : RM'||TO_CHAR(V_AVG_SALES/12, '9,999,999.99'));
+    DBMS_OUTPUT.PUT_LINE('Highest sales amount          : RM'||TO_CHAR(V_HIGHEST_SALES, '9,999,999.99'));
+    DBMS_OUTPUT.PUT_LINE('Highest sales month           :   '||LPAD(V_HIGH_MONTH, 19, ' '));
+    DBMS_OUTPUT.PUT_LINE('Contribution of highest sales :   '||TO_CHAR((V_HIGHEST_SALES/V_TOTAL_SALES)*100, '9,999,999.99')||'%');
+    DBMS_OUTPUT.PUT_LINE(' ');
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'-End Of Report-');
 
 EXCEPTION
@@ -130,7 +152,3 @@ END;
 /
 
 EXEC YEARLY_REPORT_SALES_BY_LOCATION_DETAILRPT('Kuala Lumpur',2017);
-
-
-
-

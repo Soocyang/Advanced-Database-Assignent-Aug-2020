@@ -1,51 +1,61 @@
-CREATE OR REPLACE PROCEDURE RESTAURANT_PERFORMANCE_SUMMARY_REPORT(IN_FIRSTYEAR IN VARCHAR, IN_SECONDYEAR IN VARCHAR)
-IS
+CREATE OR REPLACE PROCEDURE RESTAURANT_PERFORMANCE_SUMMARY_REPORT(
+    IN_FIRSTYEAR  IN VARCHAR,
+    IN_SECONDYEAR IN VARCHAR,
+    IN_AMOUNT     IN NUMBER
+) IS
     V_COUNTPOSITIVE NUMBER := 0;
     V_COUNTNEGATIVE NUMBER := 0;
     V_PAGE          NUMBER := 1;
     V_ROWS          NUMBER := 0;
+
+    V_TOP_INC_N     NUMBER := 0;
+    V_TOP_INC_S     VARCHAR(50);
+    V_TOP_DEC_N     NUMBER := 0;
+    V_TOP_DEC_S     VARCHAR(50);
+    
     E_INVALIDINPUT EXCEPTION;
     E_INVALIDYEAR  EXCEPTION;
 
     CURSOR REPORT_CURSOR IS
 
-        SELECT  CONCAT('R', R.RESTAURANTID) AS RESTAURANT_ID, 
-                R.RESTAURANTNAME,  
-                TO_CHAR(V1.TOTAL_SALES,'FM999,999.00') AS YEAR_1_TOTAL_SALES,
-                TO_CHAR(V2.TOTAL_SALES,'FM999,999.00') AS YEAR_2_TOTAL_SALES,
-                (100 * (V2.TOTAL_SALES - V1.TOTAL_SALES) / V1.TOTAL_SALES) AS PERCENT_CHANGE
-        FROM    RESTAURANT R, 
-                VIEWS_TOTALORDERS_SALES_RESTAURANT_BY_YEAR V1,
-                VIEWS_TOTALORDERS_SALES_RESTAURANT_BY_YEAR V2
-        WHERE   (R.RESTAURANTID = V1.RESTAURANTID) AND
-                (V1.YEAR = IN_FIRSTYEAR) AND
-                (R.RESTAURANTID = V2.RESTAURANTID) AND
-                (V2.YEAR = IN_SECONDYEAR) 
+        SELECT CONCAT('RE', V1.RESTAURANTID) AS RESTAURANT_ID, 
+               V1.RESTAURANTNAME,  
+               TO_CHAR(V1.TOTAL_SALES,'FM999,999.00') AS YEAR_1_TOTAL_SALES,
+               TO_CHAR(V2.TOTAL_SALES,'FM999,999.00') AS YEAR_2_TOTAL_SALES,
+               (100 * (V2.TOTAL_SALES - V1.TOTAL_SALES) / V1.TOTAL_SALES) AS PERCENT_CHANGE
+        FROM VIEWS_TOTALORDERS_SALES_RESTAURANT_BY_YEAR V1,
+             VIEWS_TOTALORDERS_SALES_RESTAURANT_BY_YEAR V2
+        WHERE V1.RESTAURANTID = V2.RESTAURANTID
+          AND V1.YEAR         = IN_FIRSTYEAR
+          AND V2.YEAR         = IN_SECONDYEAR 
+          AND v1.TOTAL_SALES >= IN_AMOUNT 
+          AND v2.TOTAL_SALES >= IN_AMOUNT
         ORDER BY RESTAURANT_ID;
 
     REPORT_REC REPORT_CURSOR%ROWTYPE;
 
 BEGIN
 
-    -- CHECK IF IT IS NUMBER
-    IF ((IS_NUMBER(IN_FIRSTYEAR) = 0) OR (IS_NUMBER(IN_SECONDYEAR) = 0)) THEN
+    -- CHECK IF INPUT IS NUMBER
+    IF ((IS_NUMBER(IN_FIRSTYEAR) = 0) OR (IS_NUMBER(IN_SECONDYEAR) = 0) OR (IS_NUMBER(IN_AMOUNT) = 0)) THEN
         RAISE E_INVALIDINPUT;
     END IF;
     
-    -- CHECK IF IT IS YEAR
+    -- CHECK IF INPUT IS YEAR
     IF ((IN_FIRSTYEAR > TO_CHAR(SYSDATE,'YYYY')) OR (IN_SECONDYEAR > TO_CHAR(SYSDATE,'YYYY'))) THEN
         RAISE E_INVALIDYEAR;
     END IF;
 
     DBMS_OUTPUT.PUT_LINE(CHR(10));
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'Summary Report');
-    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',25,' ') ||'Restaurant Performance Report - Total Orders Served By Years');
+    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',22,' ') ||'Restaurant Performance Report - Total Orders Served By '||IN_FIRSTYEAR||' and '||IN_SECONDYEAR);
+    DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',40,' ') ||'Minimum RM'||TO_CHAR(IN_AMOUNT,'9,999,999.00')||' sales');
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',25,' ') || LPAD('=',59,'='));
 
     -- OPEN QUERY 
     OPEN REPORT_CURSOR;
     LOOP
-    FETCH REPORT_CURSOR INTO REPORT_REC;        -- FETCH RECORDS
+    FETCH REPORT_CURSOR INTO REPORT_REC;
     EXIT WHEN REPORT_CURSOR%NOTFOUND;
 
         -- PRINT PAGES BY PAGES
@@ -55,58 +65,68 @@ BEGIN
                                 RPAD(TO_CHAR(SYSDATE,'DD/MM/YYYY'), 10, ' ')||
                                 LPAD(' ', 70, ' ')||
                                 'Page: '||LPAD(V_PAGE, 2, ' '));
-
             -- COLUMNS HEADERS
             DBMS_OUTPUT.PUT_LINE(' ');
-            DBMS_OUTPUT.PUT_LINE(LPAD(' ', 10,' ')||'Restaurant Information'||LPAD(' ', 31,' ')||'Total Number Of Orders');
+            DBMS_OUTPUT.PUT_LINE(LPAD(' ', 10,' ')||'Restaurant Information'||LPAD(' ', 45,' ')||'Total Sales');
             DBMS_OUTPUT.PUT_LINE(' ');
-            DBMS_OUTPUT.PUT_LINE(RPAD('ID', 10, ' ')||
-                                    RPAD('Restautant', 60, ' ')||
-                                    'Year '||RPAD(IN_FIRSTYEAR, 8,' ')||
-                                    'Year '||RPAD(IN_SECONDYEAR, 8,' ')||
-                                    RPAD('Performance In %', 20,' '));
+            DBMS_OUTPUT.PUT_LINE(RPAD('ID'                  , 9,' ')||' '||
+                                 RPAD('Restautant'          ,59,' ')||' '||
+                                 LPAD('Year '||IN_FIRSTYEAR ,12,' ')||' '||
+                                 LPAD('Year '||IN_SECONDYEAR,12,' ')||' '||
+                                 LPAD('Performance In %'    ,19,' '));
             -- COLUMNS SEPERATOR 
-            DBMS_OUTPUT.PUT_LINE(RPAD('=', 9 ,'=')||' '||
-                                    RPAD('=', 59 ,'=')||' '||
-                                    LPAD('=', 12 ,'=')||' '||
-                                    LPAD('=', 12 ,'=')||' '||
-                                    LPAD('=', 19 ,'='));
+            DBMS_OUTPUT.PUT_LINE(RPAD('=',  9 ,'=')||' '||
+                                 RPAD('=', 59 ,'=')||' '||
+                                 LPAD('=', 12 ,'=')||' '||
+                                 LPAD('=', 12 ,'=')||' '||
+                                 LPAD('=', 19 ,'='));
             V_ROWS := 0;
             V_PAGE := V_PAGE + 1;
         END IF;
 
         -- PRINT RECORD
-        DBMS_OUTPUT.PUT_LINE( RPAD(REPORT_REC.RESTAURANT_ID, 10, ' ')|| 
-                              RPAD(REPORT_REC.RESTAURANTNAME, 60, ' ')|| 
-                              LPAD(REPORT_REC.YEAR_1_TOTAL_SALES, 12,' ') || ' ' ||
-                              LPAD(REPORT_REC.YEAR_2_TOTAL_SALES, 12,' ') || ' ' ||
-                              LPAD(TO_CHAR(REPORT_REC.PERCENT_CHANGE, 990.99), 17,' ') || ' %');
-
+        DBMS_OUTPUT.PUT_LINE(RPAD(REPORT_REC.RESTAURANT_ID                        , 9,' ')|| ' ' || 
+                             RPAD(REPORT_REC.RESTAURANTNAME                       ,59,' ')|| ' ' || 
+                             LPAD(REPORT_REC.YEAR_1_TOTAL_SALES                   ,12,' ')|| ' ' ||
+                             LPAD(REPORT_REC.YEAR_2_TOTAL_SALES                   ,12,' ')|| ' ' ||
+                             LPAD(TO_CHAR(REPORT_REC.PERCENT_CHANGE, 990.99)||' %',19,' '));
         
         -- COUNT POSITIVE OR NEGATIVE PERFORMANCE
         IF REPORT_REC.PERCENT_CHANGE >= 0 THEN
             V_COUNTPOSITIVE := V_COUNTPOSITIVE + 1;
+            -- CHECK IF IS TOP INCREASE
+            IF (REPORT_REC.PERCENT_CHANGE > V_TOP_INC_N) THEN
+                V_TOP_INC_S := REPORT_REC.RESTAURANTNAME;
+                V_TOP_INC_N := REPORT_REC.PERCENT_CHANGE;
+            END IF;
         ELSE        
             V_COUNTNEGATIVE := V_COUNTNEGATIVE + 1;
+            -- CHECK IF IS TOP DECREASE
+            IF (REPORT_REC.PERCENT_CHANGE < V_TOP_DEC_N) THEN
+                V_TOP_DEC_S := REPORT_REC.RESTAURANTNAME;
+                V_TOP_DEC_N := REPORT_REC.PERCENT_CHANGE;
+            END IF;
         END IF;
         
         V_ROWS := V_ROWS + 1;
 
     END LOOP;
 
-    DBMS_OUTPUT.PUT_LINE( RPAD('=', 9 ,'=')  ||' '||
-                          RPAD('=', 59 ,'=') ||' '||
-                          LPAD('=', 12 ,'=')  ||' '||
-                          LPAD('=', 12 ,'=')  ||' '||
-                          LPAD('=', 19 ,'='));
+    DBMS_OUTPUT.PUT_LINE(RPAD('=',  9 ,'=')||' '||
+                         RPAD('=', 59 ,'=')||' '||
+                         LPAD('=', 12 ,'=')||' '||
+                         LPAD('=', 12 ,'=')||' '||
+                         LPAD('=', 19 ,'='));
 
     DBMS_OUTPUT.PUT_LINE(' ');
-
     DBMS_OUTPUT.PUT_LINE('There are ' || V_COUNTPOSITIVE || ' restaurants with positive performance.');
-    DBMS_OUTPUT.PUT_LINE('There are ' || V_COUNTNEGATIVE || ' restaurants with negative performance.');
-
+    DBMS_OUTPUT.PUT_LINE('The highest performance increase is ' || V_TOP_INC_S 
+                       ||' with ' || TO_CHAR(V_TOP_INC_N, 99.99) || '% of sales.');
     DBMS_OUTPUT.PUT_LINE(' ');
-
+    DBMS_OUTPUT.PUT_LINE('There are ' || V_COUNTNEGATIVE || ' restaurants with negative performance.');
+    DBMS_OUTPUT.PUT_LINE('The highest performance decrease is ' || V_TOP_DEC_S
+                       ||' with ' || TO_CHAR(V_TOP_DEC_N, 99.99) || '% of sales.');
+    DBMS_OUTPUT.PUT_LINE(' ');
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',45,' ') ||'-END OF REPORT-');
 
     EXCEPTION
@@ -124,5 +144,4 @@ BEGIN
 END;
 /
 
-EXEC RESTAURANT_PERFORMANCE_SUMMARY_REPORT(2017,2018);
-
+EXEC RESTAURANT_PERFORMANCE_SUMMARY_REPORT(2017,2018,75000);

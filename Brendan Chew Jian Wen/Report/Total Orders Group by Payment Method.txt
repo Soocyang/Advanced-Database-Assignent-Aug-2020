@@ -4,7 +4,12 @@ CREATE OR REPLACE PROCEDURE ORDERS_PAYMENT_METHOD_ONDEMAND_REPORT(
 IS
     V_FROM_DATE         DATE;
     V_TO_DATE           DATE;
-    V_TOTALORDERS       NUMBER := 0; 
+    V_TOTAL_ORDERS      NUMBER := 0; 
+    V_TOTAL_SALES       NUMBER := 0;
+    V_TOP_PAY_METHOD_N  NUMBER := 0;
+    V_TOP_PAY_METHOD_S  VARCHAR(20);
+    V_TOP_SALES_N       NUMBER := 0;
+    V_TOP_SALES_S       VARCHAR(20);
 
     V_PAGE              NUMBER := 1;
     V_ROWS              NUMBER := 0;
@@ -15,9 +20,13 @@ IS
 
     CURSOR REPORT_CURSOR (FROM_DATE DATE, TO_DATE DATE) IS
 
-        SELECT PAYMENTMETHOD AS PAYMENT_METHOD, COUNT(PAYMENTMETHOD) AS PAYMENT_COUNT
-        FROM ORDERS O 
-        WHERE ORDERDATE BETWEEN FROM_DATE AND TO_DATE
+        SELECT PAYMENTMETHOD AS PAYMENT_METHOD,
+               COUNT(PAYMENTMETHOD) AS PAYMENT_COUNT,
+               SUM(O.SUBTOTAL) AS TOTAL_SALES,
+               AVG(O.SUBTOTAL) AS AVG_SALES
+        FROM   ORDERS O 
+        WHERE  ORDERDATE BETWEEN FROM_DATE 
+                             AND TO_DATE
         GROUP BY PAYMENTMETHOD
         ORDER BY PAYMENT_COUNT DESC;
 
@@ -25,11 +34,16 @@ IS
    
     CURSOR REPORT_CURSOR_2 (PAYMENT_METHOD VARCHAR, FROM_DATE DATE, TO_DATE DATE) IS
 
-        SELECT C.STATE AS STATE, COUNT(C.STATE) AS STATE_COUNT
-        FROM ORDERS O, CUSTOMERS C
-        WHERE ORDERDATE BETWEEN FROM_DATE AND TO_DATE
-          AND O.PAYMENTMETHOD = PAYMENT_METHOD
-          AND O.CUSTOMERID = C.CUSTOMERID 
+        SELECT C.STATE AS STATE, 
+               COUNT(C.STATE) AS STATE_COUNT, 
+               SUM(O.SUBTOTAL) AS TOTAL_SALES,
+               AVG(O.SUBTOTAL) AS AVG_SALES
+        FROM   ORDERS O,
+               CUSTOMERS C
+        WHERE  O.PAYMENTMETHOD = PAYMENT_METHOD
+          AND  O.CUSTOMERID = C.CUSTOMERID 
+          AND  ORDERDATE BETWEEN FROM_DATE 
+                             AND TO_DATE
         GROUP BY C.STATE
         ORDER BY STATE_COUNT DESC;
 
@@ -66,51 +80,61 @@ BEGIN
     -- OPEN QUERY 
     OPEN REPORT_CURSOR(V_FROM_DATE, V_TO_DATE);
     LOOP
-    FETCH REPORT_CURSOR INTO REPORT_REC;            -- FETCH RECORDS
+    FETCH REPORT_CURSOR INTO REPORT_REC;
     EXIT WHEN REPORT_CURSOR%NOTFOUND;
 
         -- PRINT PAGES BY PAGES - PRINT ONLY IF THE RECORD COUNT IS 0 OR REACHES 20 THEN PRINT NEXT PAGE HEADINGS
         IF(V_ROWS = 0 OR V_ROWS >= 20) THEN
             DBMS_OUTPUT.PUT_LINE(CHR(10));
             DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
-                                RPAD(TO_CHAR(SYSDATE,'DD/MM/YYYY'), 10, ' ')||
-                                LPAD(' ', 70, ' ')||
-                                'Page: '||LPAD(V_PAGE, 2, ' '));
+                                 RPAD(TO_CHAR(SYSDATE,'DD/MM/YYYY'), 10, ' ')||
+                                 LPAD(' ', 70, ' ')||
+                                 'Page: '||LPAD(V_PAGE, 2, ' '));
 
             -- COLUMNS HEADERS
             DBMS_OUTPUT.PUT_LINE(CHR(10));
-            DBMS_OUTPUT.PUT_LINE(RPAD('Payment Method', 30, ' ')||
-                                 RPAD('State', 30, ' ')||
-                                 RPAD('Payment Count', 30, ' '));
+            DBMS_OUTPUT.PUT_LINE(RPAD('Payment Method'    ,24,' ')||' '||
+                                 RPAD('State'             ,24,' ')||' '||
+                                 LPAD('Payment Count'     ,19,' ')||' '||
+                                 LPAD('Sales (RM)'        ,19,' ')||' '||
+                                 LPAD('Average Sales (RM)',19,' '));
 
-        -- COLUMNS SEPERATOR 
-            DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
-                                 RPAD('=', 29 ,'=')||' '||
-                                 RPAD('=', 29 ,'=')||' ');
+            -- COLUMNS SEPERATOR 
+            DBMS_OUTPUT.PUT_LINE(RPAD('=',24,'=')||' '||
+                                 RPAD('=',24,'=')||' '||
+                                 RPAD('=',19,'=')||' '||
+                                 RPAD('=',19,'=')||' '||
+                                 RPAD('=',19,'=')||' ');
 
             V_ROWS := 0;
             V_PAGE := V_PAGE + 1;
         END IF;
 
-        DBMS_OUTPUT.PUT_LINE( RPAD(REPORT_REC.PAYMENT_METHOD, 30, ' ')|| 
-                              LPAD(' ', 30, ' ')||
-                              LPAD(TO_CHAR(REPORT_REC.PAYMENT_COUNT, '999,999'), 29, ' '));
+        DBMS_OUTPUT.PUT_LINE( RPAD(REPORT_REC.PAYMENT_METHOD                       ,24,' ')||' '|| 
+                              RPAD(' '                                             ,24,' ')||' '||
+                              LPAD(TO_CHAR(REPORT_REC.PAYMENT_COUNT,  '999,999'   ),19,' ')||' '||
+                              LPAD(TO_CHAR(REPORT_REC.TOTAL_SALES  ,'9,999,999.99'),19,' ')||' '||
+                              LPAD(TO_CHAR(REPORT_REC.AVG_SALES    ,'9,999,999.99'),19,' '));
         
         V_ROWS := V_ROWS + 1;
 
         -- COLUMNS SEPERATOR 
-            DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
-                                 RPAD('=', 29 ,'=')||' '||
-                                 RPAD('=', 29 ,'=')||' ');
+        DBMS_OUTPUT.PUT_LINE(RPAD('=', 24 ,'=')||' '||
+                             RPAD('=', 24 ,'=')||' '||
+                             RPAD('=', 19 ,'=')||' '||
+                             RPAD('=', 19 ,'=')||' '||
+                             RPAD('=', 19 ,'=')||' ');
 
         OPEN REPORT_CURSOR_2(REPORT_REC.PAYMENT_METHOD, V_FROM_DATE, V_TO_DATE);
         LOOP
-        FETCH REPORT_CURSOR_2 INTO REPORT_REC_2;            -- FETCH RECORDS
+        FETCH REPORT_CURSOR_2 INTO REPORT_REC_2;
         EXIT WHEN REPORT_CURSOR_2%NOTFOUND;
                     
-            DBMS_OUTPUT.PUT_LINE( RPAD(' ', 30, ' ')||
-                                  RPAD(REPORT_REC_2.STATE, 30, ' ')||
-                                  LPAD(TO_CHAR(REPORT_REC_2.STATE_COUNT, '999,999'), 29, ' '));
+            DBMS_OUTPUT.PUT_LINE(RPAD(' '                                              ,24,' ')||' '||
+                                 RPAD(REPORT_REC_2.STATE                               ,24,' ')||' '||
+                                 LPAD(TO_CHAR(REPORT_REC_2.STATE_COUNT,   '999,999'   ),19,' ')||' '||
+                                 LPAD(TO_CHAR(REPORT_REC_2.TOTAL_SALES, '9,999,999.99'),19,' ')||' '||
+                                 LPAD(TO_CHAR(REPORT_REC_2.AVG_SALES  , '9,999,999.99'),19,' '));
 
             V_ROWS := V_ROWS + 1;
 
@@ -120,22 +144,39 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE(' ');
 
         -- COLUMNS SEPERATOR 
-            DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
-                                 RPAD('=', 29 ,'=')||' '||
-                                 RPAD('=', 29 ,'=')||' ');
+        DBMS_OUTPUT.PUT_LINE(RPAD('=', 24 ,'=')||' '||
+                             RPAD('=', 24 ,'=')||' '||
+                             RPAD('=', 19 ,'=')||' '||
+                             RPAD('=', 19 ,'=')||' '||
+                             RPAD('=', 19 ,'=')||' ');
 
-        V_TOTALORDERS := V_TOTALORDERS + REPORT_REC.PAYMENT_COUNT;
+        -- CHECK IF IS TOP USED
+        IF (REPORT_REC.PAYMENT_COUNT > V_TOP_PAY_METHOD_N) THEN
+            V_TOP_PAY_METHOD_N := REPORT_REC.PAYMENT_COUNT;
+            V_TOP_PAY_METHOD_S := REPORT_REC.PAYMENT_METHOD;
+        END IF;
+
+        -- CHECK IF IS TOP SALES
+        IF (REPORT_REC.TOTAL_SALES > V_TOP_SALES_N) THEN
+            V_TOP_SALES_N := REPORT_REC.TOTAL_SALES;
+            V_TOP_SALES_S := REPORT_REC.PAYMENT_METHOD;
+        END IF;
+
+        V_TOTAL_ORDERS := V_TOTAL_ORDERS + REPORT_REC.PAYMENT_COUNT;
+        V_TOTAL_SALES  := V_TOTAL_SALES  + REPORT_REC.TOTAL_SALES;
+
     END LOOP;
     CLOSE REPORT_CURSOR;
 
-        -- COLUMNS SEPERATOR 
-        DBMS_OUTPUT.PUT_LINE(RPAD('=', 29 ,'=')||' '||
-                             RPAD('=', 29 ,'=')||' '||
-                             RPAD('=', 29 ,'=')||' ');
-
-    DBMS_OUTPUT.PUT_LINE(RPAD(' ', 29 ,' ')||' '||
-                         LPAD('Total Orders :',29,' ')||
-                         LPAD(TO_CHAR(V_TOTALORDERS, '999,999'), 30, ' '));
+    DBMS_OUTPUT.PUT_LINE(RPAD(' '                                 ,24,' ')||' '||
+                         LPAD('Total :'                           ,24,' ')||' '||
+                         LPAD(TO_CHAR(V_TOTAL_ORDERS,'999,999'   ),19,' ')||' '||
+                         LPAD(TO_CHAR(V_TOTAL_SALES ,'999,999.00'),19,' '));
+    DBMS_OUTPUT.PUT_LINE(' ');
+    DBMS_OUTPUT.PUT_LINE('Highest sales method : '||V_TOP_SALES_S     
+                       ||' made RM'               ||TO_CHAR(V_TOP_SALES_N, '9,999,999')|| ' of sales.');
+    DBMS_OUTPUT.PUT_LINE('Most used method     : '||V_TOP_PAY_METHOD_S
+                       ||' was used '             ||TO_CHAR(V_TOP_PAY_METHOD_N, '999,999')|| ' times.');
     DBMS_OUTPUT.PUT_LINE(' ');
     DBMS_OUTPUT.PUT_LINE(CHR(13)|| LPAD(' ',48,' ') ||'-End Of Report-');
 
@@ -161,6 +202,3 @@ END;
 
 EXEC ORDERS_PAYMENT_METHOD_ONDEMAND_REPORT('01/07/2017', '07/07/2017');
 EXEC ORDERS_PAYMENT_METHOD_ONDEMAND_REPORT('01/01/2017', '31/12/2017');
-
-
-
