@@ -1,0 +1,69 @@
+CREATE OR REPLACE PROCEDURE proc_update_orders_cancelled(IN_ORDERID IN NUMBER) IS
+
+    v_customerName      customers.customerName%TYPE;
+    v_orderDate         orders.orderDate%TYPE;
+    v_paymentMethod     orders.paymentMethod%TYPE;
+    v_current_status    orders.status%TYPE;
+    v_subtotal          orders.subtotal%TYPE;
+    v_receivedTime      orders.receivedTime%TYPE;
+
+    e_invalid_cancellation EXCEPTION;
+
+BEGIN
+
+    SELECT c.customerName, o.orderDate, o.paymentMethod, o.status, o.subtotal, o.receivedTime 
+    INTO v_customerName, v_orderDate, v_paymentMethod, v_current_status, v_subtotal, v_receivedTime
+    FROM customers c, orders o
+    WHERE c.customerId = o.customerId AND
+            o.orderId = IN_ORDERID;
+
+    IF v_current_status = 'Delivered' THEN
+        RAISE e_invalid_cancellation;
+    END IF;
+
+    UPDATE orders 
+    SET status = 'Cancelled'
+    WHERE orderId = IN_ORDERID;
+    
+    DBMS_OUTPUT.PUT_LINE ('Updated Order Status');
+    DBMS_OUTPUT.PUT_LINE ('============================================');
+    DBMS_OUTPUT.PUT_LINE ('Customer Name  : ' || v_customerName);
+    DBMS_OUTPUT.PUT_LINE ('Order Date     : ' || v_orderDate);
+    DBMS_OUTPUT.PUT_LINE ('Payment Method : ' || v_paymentMethod);
+    DBMS_OUTPUT.PUT_LINE ('Subtotal       : ' || v_subtotal);   
+    DBMS_OUTPUT.PUT_LINE ('Current Status : ' || v_current_status);
+    DBMS_OUTPUT.PUT_LINE ('Updated Status : ' || 'Cancelled');
+
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN 
+        raise_application_error(-20034,'No records found for the order.');
+    WHEN VALUE_ERROR THEN
+        raise_application_error(-20035,'Invalid  Input: Input order id must be a numeric');
+    WHEN e_invalid_cancellation THEN 
+        raise_application_error(-20036,'Invalid Cancellation This order has been delivered cannot be cancelled.');
+    WHEN OTHERS THEN
+        raise_application_error(-20040,'An error has occur during the update statement, please contact the database administrator.');
+
+END;
+/
+
+-- EXEC proc_update_orders_cancelled(100001);
+
+
+-- -- ===================================================
+
+-- insert into orders values(128802,1013,1012,1022,59.3,'In-App Credits',10.9,'17/06/2019', NULL,TO_DATE('15/09/2020 11:33:41', 'DD/MM/YYYY HH24:MI:SS'), NULL);
+
+
+
+-- UPDATE orders 
+-- SET status = 'Delivered'
+-- WHERE orderId = IN_ORDERID;
+
+
+-- EXEC proc_update_orders_cancelled(128802);
+
+
+-- DELETE FROM orders
+-- WHERE orderId = 128802;

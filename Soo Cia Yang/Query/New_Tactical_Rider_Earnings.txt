@@ -1,0 +1,81 @@
+ACCEPT v_Year   DATE   FORMAT 'YYYY'   PROMPT 'Enter value Year format(YYYY): '
+
+TTITLE CENTER 'Rider Performance Report - Riders Earning Report Based on Location YEAR &v_Year' SKIP 1 -
+CENTER ============================================================================  SKIP 1 -
+RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 1 -
+
+COLUMN area FORMAT a30 HEADING 'Area (State)'
+COLUMN Number_Of_Riders FORMAT 999 HEADING 'No. of Riders'
+COLUMN Average_Orders_Delivered FORMAT 9,999 HEADING 'Average Orders Delivered'
+COLUMN Average_Riders_Earnings FORMAT 9,999.99 HEADING 'Average Rider Earnings'
+
+SELECT r.area, COUNT(r.riderId) Number_Of_Riders, ROUND(AVG(q1.Total_Orders_Delivered_By_Year)) Average_Orders_Delivered, 
+       ROUND(AVG(q1.Total_Orders_Delivered_By_Year)) * 15.50 AS Average_Riders_Earnings
+FROM riders r 
+       LEFT JOIN 
+       (SELECT r.riderId, r.riderName, COUNT(o.orderId) AS Total_Orders_Delivered_By_Year
+        FROM orders o, riders r
+        WHERE o.riderId = r.riderId AND 
+              EXTRACT(YEAR FROM o.orderDate) = &v_Year
+        GROUP BY r.riderId, r.riderName
+       ) q1
+      ON r.riderId = q1.riderId
+GROUP BY r.area
+ORDER BY Average_Orders_Delivered DESC;
+
+CLEAR COLUMNS
+TTITLE OFF
+
+
+
+
+
+
+------------------------------
+
+
+-- ================== Testing Logic ==================
+-- COLUMN area FORMAT a20 HEADING "Area"
+-- COLUMN riderName FORMAT a45 HEADING "Rider Name"
+-- COLUMN Total_Orders_Delivered_By_Year FORMAT 9999 HEADING "Total Orders Delivered"
+
+-- BREAK ON area  SKIP 1
+-- COMPUTE AVG LABEL 'Average Orders Delivered by Riders : ' OF Total_Orders_Delivered_By_Year ON area
+
+-- SELECT r.area, r.riderId, r.riderName, count(o.orderId) AS Total_Orders_Delivered_By_Year
+-- FROM orders o, riders r
+-- WHERE o.riderId = r.riderId AND 
+--        EXTRACT(YEAR FROM o.orderDate) = 2017
+-- GROUP BY r.area, r.riderId, r.riderName
+-- ORDER BY r.area desc, r.riderId;
+
+-- CLEAR COLUMNS;
+-- CLEAR BREAKS;
+
+-- ==================  Logic 2 ================== 
+-- COLUMN riderName FORMAT a45 HEADING "Rider Name"
+-- COLUMN Total_Orders_Delivered_By_Year FORMAT 9999 HEADING "Total Orders Delivered"
+
+-- SELECT r.riderId, r.riderName, count(o.orderId) AS Total_Orders_Delivered_By_Year
+-- FROM orders o, riders r
+-- WHERE o.riderId = r.riderId AND 
+--        EXTRACT(YEAR FROM o.orderDate) = 2017
+-- GROUP BY r.riderId, r.riderName;
+
+-- ================================== USE THIS CODE ==========================================
+-- SELECT r.area, COUNT(r.riderId) Number_Of_Riders, ROUND(AVG(q1.Total_Orders_Delivered_By_Year)) Average_Orders_Delivered, 
+--        ROUND(AVG(q1.Total_Orders_Delivered_By_Year)) * 15.50 AS Average_Riders_Earnings
+-- FROM riders r 
+--        LEFT JOIN 
+--        (SELECT r.riderId, r.riderName, COUNT(o.orderId) AS Total_Orders_Delivered_By_Year
+--         FROM orders o, riders r
+--         WHERE o.riderId = r.riderId AND 
+--               EXTRACT(YEAR FROM o.orderDate) = 2017
+--         GROUP BY r.riderId, r.riderName
+--        ) q1
+--       ON r.riderId = q1.riderId
+-- GROUP BY r.area
+-- ORDER BY Average_Orders_Delivered DESC;
+
+-- CLEAR COLUMNS
+-- TTITLE OFF

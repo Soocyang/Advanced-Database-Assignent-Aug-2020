@@ -75,6 +75,8 @@ EXCEPTION
         raise_application_error(-20032,'No records found for the category or the restaurant.');
     WHEN DUP_VAL_ON_INDEX THEN
         raise_application_error(-20033,'You have tried to insert a same category.');
+    WHEN OTHERS THEN
+        raise_application_error(-20040,'An error has occur during the insert statement, please contact the database administrator.')
 END;
 /
 
@@ -87,7 +89,7 @@ exec insert_restaurant_category(1001, 1002)
 -- TO REMOVE IT AND TEST AGAIN
 DELETE FROM categoryList
 WHERE   restaurantId = 1001 AND
-        categoryId = 1002;
+        categoryId = 1024;
 
 --==========================================
 

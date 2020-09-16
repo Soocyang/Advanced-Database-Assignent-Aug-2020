@@ -1,0 +1,184 @@
+CREATE OR REPLACE PROCEDURE proc_customer_sales_by_location(IN_Year IN VARCHAR,
+                                                                IN_First_Month IN VARCHAR,
+                                                                IN_Second_Month IN VARCHAR)
+IS
+    v_total_sales_1     NUMBER := 0;
+    v_total_sales_2     NUMBER := 0;
+    v_overall_growth    NUMBER := 0;
+    v_countPositive     NUMBER := 0;
+    v_countNegative     NUMBER := 0;
+
+    v_pageCount         NUMBER := 1;
+    V_loop              NUMBER := 0;
+    e_invalidInput      EXCEPTION;
+    e_invalidYear       EXCEPTION;
+    e_invalidMonth      EXCEPTION;
+
+    CURSOR Report_Cursor IS
+        SELECT DISTINCT c.state, 
+                v1.total_sales as Total_Sales_1stMonth, 
+                v2.total_sales as Total_Sales_2ndMonth, 
+                ((v2.total_sales - v1.total_sales)/v1.total_sales * 100) as Growth_Rate
+        FROM    customers c, views_TotalSales_By_Customer_Locations v1, views_TotalSales_By_Customer_Locations v2
+        WHERE   (c.state = v1.state) AND
+                (v1.year = IN_Year) AND
+                (v1.month = IN_First_Month) AND
+                (c.state = v2.state) AND
+                (v2.year = IN_Year) AND
+                (v2.month = IN_Second_Month)
+        ORDER BY Growth_Rate DESC;
+
+    Report_rec Report_Cursor%ROWTYPE;
+
+BEGIN
+
+    -- Verify Input
+    IF ((IS_NUMBER(IN_Year) = 0) OR (IS_NUMBER(IN_First_Month) = 0) OR (IS_NUMBER(IN_Second_Month) = 0) ) THEN
+        raise e_invalidInput;
+    ELSE
+        IF (IN_Year > TO_CHAR(sysdate,'yyyy')) THEN
+            raise e_invalidYear;
+
+        ELSE
+            IF( (IN_First_Month < 1) OR (IN_First_Month > 12) OR (IN_Second_Month < 1) OR (IN_Second_Month > 12) ) THEN
+                raise e_invalidMonth;
+
+            END IF;
+        END IF;
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',48,' ') ||'SUMMARY REPORT');
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',15,' ') ||'SALES GROWTH REPORT BY CUSTOMER''S LOCATION OF YEAR ' || 
+                            IN_Year || ' ON ' || TO_CHAR(TO_DATE(IN_First_Month, 'MM'), 'MONTH') || 'AND ' || 
+                            TO_CHAR(TO_DATE(IN_Second_Month, 'MM'), 'MONTH'));
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',15,' ') || LPAD('=',80,'='));
+
+
+    -- OPEN QUERY 
+    OPEN Report_Cursor;
+    LOOP
+    FETCH Report_Cursor into Report_rec;        -- FETCH RECORDS
+    EXIT WHEN Report_Cursor%NOTFOUND;
+
+        -- PRINT PAGES BY PAGES
+        IF(v_loop = 0 OR v_loop = 20) THEN
+            DBMS_OUTPUT.PUT_LINE(' ');
+            DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
+                                RPAD(TO_CHAR(sysdate,'dd/mm/yyyy'), 10, ' ')||
+                                LPAD(' ', 70, ' ')||
+                                'Page: '||LPAD(v_pageCount, 2, ' '));
+
+            -- COLUMNS HEADERS
+            DBMS_OUTPUT.PUT_LINE(' ');
+            DBMS_OUTPUT.PUT_LINE(RPAD('    Area (State)', 25, ' ')||
+                                    RPAD('Total Sales of '|| TO_CHAR(TO_DATE(IN_First_Month, 'MM'), 'MONTH'), 30, ' ')||
+                                    RPAD('Total Sales of '|| TO_CHAR(TO_DATE(IN_Second_Month, 'MM'), 'MONTH'), 30, ' ') ||
+                                    RPAD('Growth Rate %', 25,' '));
+            -- COLUMNS SEPERATOR 
+            DBMS_OUTPUT.PUT_LINE(RPAD('=', 20 ,'=')||' '||
+                                    RPAD('=', 30 ,'=')||' '||
+                                    LPAD('=', 30 ,'=')||' '||
+                                    LPAD('=', 16 ,'=')||' ');
+            v_loop := 0;
+            v_pageCount := v_pageCount + 1;
+        END IF;
+
+        -- PRINT RECORD
+        DBMS_OUTPUT.PUT_LINE( RPAD(Report_rec.state, 25, ' ')|| 
+                                LPAD('RM' || TO_CHAR(Report_rec.Total_Sales_1stMonth, '99,999.99') , 26, ' ') || 
+                                LPAD('RM' || TO_CHAR(Report_rec.Total_Sales_2ndMonth, '99,999.99') , 31, ' ') || 
+                                LPAD(TO_CHAR(Report_rec.Growth_Rate, 990.99), 14,' ')  || ' %');
+
+
+        -- COUNT TOTAL SALES FOR THE YEAR 
+        v_total_sales_1 := v_total_sales_1 + Report_rec.Total_Sales_1stMonth;
+        v_total_sales_2 := v_total_sales_2 + Report_rec.Total_Sales_2ndMonth    ;
+
+
+        -- COUNT POSITIVE OR NEGATIVE GROWTH FOR THE LOCATION
+        IF Report_rec.Growth_Rate > 0 THEN
+            v_countPositive := v_countPositive + 1;
+        ELSE        
+            v_countNegative := v_countNegative + 1;
+        END IF;
+
+        v_loop := v_loop + 1;
+    END LOOP;
+
+    v_overall_growth := (v_total_sales_2 - v_total_sales_1)/v_total_sales_1 * 100;
+
+
+    DBMS_OUTPUT.PUT_LINE(LPAD(' ',22,'*')||'***************************** ******************************* '||'***************');
+    DBMS_OUTPUT.PUT_LINE('Overall Total Sales :'|| LPAD('RM'||TO_CHAR(v_total_sales_1, '99,999.99'), 30, ' ' ) || LPAD('RM'||TO_CHAR(v_total_sales_2, '99,999.99'), 31, ' ' ) || LPAD(TO_CHAR(v_overall_growth, 990.99), 14,' ')  || ' %');
+
+    DBMS_OUTPUT.PUT_LINE(LPAD(' ',22,'*')||'***************************** ******************************* '||'***************');
+    DBMS_OUTPUT.PUT_LINE(LPAD(' ',50,' ') || 'Number of Location With Positive Growth: '||LPAD(TO_CHAR(v_countPositive, 999), 5, ' '));
+    DBMS_OUTPUT.PUT_LINE(LPAD(' ',50,' ') || 'Number of Location With Negative Growth: '||LPAD(TO_CHAR(v_countNegative, 999), 5, ' '));
+ 
+    DBMS_OUTPUT.PUT_LINE(' ');
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',45,' ') ||'-END of REPORT-');
+
+
+
+
+    EXCEPTION
+        WHEN e_invalidInput THEN
+            DBMS_OUTPUT.PUT_LINE('Invalid  Input: Input year must be a numberic.');
+        WHEN e_invalidYear THEN
+            DBMS_OUTPUT.PUT_LINE('Invalid  Input: Input year cannot be future year.');
+        WHEN e_invalidMonth THEN
+            DBMS_OUTPUT.PUT_LINE('Invalid  Input: Month format must within number 1-12');
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Error Found. Please contact your Database Administrator');
+END;
+/
+
+exec proc_customer_sales_by_location(2017,1,2);
+
+
+
+-- ========================================= Sample Output =============================================
+
+
+-- USER2>start "D:\Programming\Advanced-Database-Assignent-Aug-2020\Soo Cia Yang\Reports\New_Summary_Report.sql"
+
+-- Procedure created.
+
+
+
+--                                                 SUMMARY REPORT
+--                SALES GROWTH REPORT BY CUSTOMER''S LOCATION OF YEAR 2017 ON JANUARY  AND FEBRUARY
+--                ================================================================================
+
+-- Printed Date: 15/09/2020                                                                      Page:  1
+
+--     Area (State)         Total Sales of JANUARY        Total Sales of FEBRUARY       Growth Rate %
+-- ==================== ============================== ============================== ================
+-- Penang                                 RM    710.60                   RM  1,132.10         59.32 %
+-- Perlis                                 RM    220.20                   RM    339.00         53.95 %
+-- Kedah                                  RM    192.80                   RM    236.40         22.61 %
+-- Melaka                                 RM    592.00                   RM    722.40         22.03 %
+-- Johor                                  RM  5,595.10                   RM  6,742.40         20.51 %
+-- Selangor                               RM 18,264.80                   RM 20,269.00         10.97 %
+-- Negeri Sembilan                        RM  2,236.00                   RM  2,419.30          8.20 %
+-- WP Putrajaya                           RM    301.80                   RM    321.10          6.39 %
+-- Wilayah Persekutuan                    RM 14,051.30                   RM 14,575.60          3.73 %
+-- Perak                                  RM  3,714.90                   RM  3,342.50        -10.02 %
+-- Pahang                                 RM    309.90                   RM    278.40        -10.16 %
+-- Sabah                                  RM    486.90                   RM    410.50        -15.69 %
+-- Pulau Pinang                           RM  1,377.60                   RM  1,063.70        -22.79 %
+-- Sarawak                                RM  3,510.90                   RM  2,700.60        -23.08 %
+-- Kelantan                               RM    852.00                   RM    572.50        -32.81 %
+-- Teluk Intan                            RM    559.80                   RM    225.50        -59.72 %
+-- ********************* ***************************** ******************************* ***************
+-- Overall Total Sales :                  RM 52,976.60                   RM 55,351.00          4.48 %
+-- ********************* ***************************** ******************************* ***************
+--                                                   Number of Location With Positive Growth:     9
+--                                                   Number of Location With Negative Growth:     7
+
+--                                              -END of REPORT-
+
+-- PL/SQL procedure successfully completed.
+
+-- USER2>

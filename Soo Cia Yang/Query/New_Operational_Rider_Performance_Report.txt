@@ -1,0 +1,32 @@
+
+
+-- ============================ Test New Logic =====================================
+
+ACCEPT v_Year   DATE   FORMAT 'YYYY'   PROMPT 'Enter value Year format(YYYY): '
+ACCEPT v_Month NUMBER   FORMAT 99  PROMPT 'Enter value 1st Month format(1-12): '
+
+TTITLE CENTER 'Rider Performance Report' SKIP 1 -
+CENTER 'YEAR &v_Year Month: &v_Month' SKIP 1 -
+CENTER ===========================================================  SKIP 1 -
+RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 2 -
+
+COLUMN riderId FORMAT a5 HEADING 'R_ID'
+COLUMN riderName FORMAT a45 HEADING 'Rider Name'
+COLUMN Total_Orders_Delivered FORMAT 999 HEADING 'Total Orders Delivered'
+COLUMN AvgTimeTaken FORMAT 999 HEADING 'Average Delivery Time (Minutes)'
+
+SELECT CONCAT('R', r.riderId) AS riderId, r.riderName,
+       COUNT(o.orderId) AS Total_Orders_Delivered,
+       ROUND(AVG((o.receivedTime - o.estimatedTime)*24*60)) as AvgTimeTaken
+FROM   orders o,
+       riders r
+WHERE  o.riderId = r.riderId AND
+       EXTRACT(YEAR FROM o.orderDate) = &v_Year AND 
+       EXTRACT(MONTH FROM o.orderDate) = &v_Month
+GROUP BY r.riderId, r.riderName
+HAVING ROUND(AVG((o.receivedTime - o.estimatedTime)*24*60)) < 9
+ORDER BY AvgTimeTaken;
+
+CLEAR COLUMNS
+TTITLE OFF
+

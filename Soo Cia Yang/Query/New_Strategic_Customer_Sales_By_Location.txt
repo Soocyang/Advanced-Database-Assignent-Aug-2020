@@ -1,0 +1,85 @@
+
+-- =============== Create View to Retrieve All Total Sales ===========================
+CREATE OR REPLACE VIEW views_TotalSales_By_Customer_Locations AS
+    SELECT c.state,
+        EXTRACT(MONTH FROM o.orderDate) MONTH,
+        EXTRACT(YEAR FROM o.orderDate) YEAR,
+        SUM(o.subtotal) AS total_sales
+    FROM   customers c, orders o
+    WHERE  c.customerId = o.customerId
+    GROUP BY c.state, EXTRACT(MONTH FROM o.orderDate), EXTRACT(YEAR FROM o.orderDate)
+    ORDER BY EXTRACT(MONTH FROM o.orderDate), total_sales DESC;
+
+-- ===================================================================================
+
+ACCEPT v_Year   DATE   FORMAT 'YYYY'   PROMPT 'Enter value Year format(YYYY): '
+ACCEPT v_Month1 NUMBER   FORMAT 99  PROMPT 'Enter value 1st Month format(1-12): '
+ACCEPT v_Month2 NUMBER   FORMAT 99  PROMPT 'Enter value 2nd Month format(1-12): '
+
+TTITLE CENTER 'Customers Sales Report - Compare Total Sales By Customer''s Location ' SKIP 1 -
+CENTER 'YEAR &v_Year Between Month: &v_Month1 And Month: &v_Month2' SKIP 1 -
+CENTER ===========================================================  SKIP 2 -
+RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 2 -
+
+COLUMN state FORMAT a30 HEADING "State"
+COLUMN Total_Sales_1stMonth FORMAT 999,999.99 HEADING "Total Sales of 1st Month"
+COLUMN Total_Sales_2ndMonth FORMAT 999,999.99 HEADING "Total Sales of 2nd Month"
+COLUMN Growth_Rate FORMAT 99.99 HEADING "Growth Rate %"
+
+SELECT DISTINCT c.state, 
+        v1.total_sales as Total_Sales_1stMonth, 
+        v2.total_sales as Total_Sales_2ndMonth, 
+        ((v2.total_sales - v1.total_sales)/v1.total_sales * 100) as Growth_Rate
+FROM    customers c, views_TotalSales_By_Customer_Locations v1, views_TotalSales_By_Customer_Locations v2
+WHERE   (c.state = v1.state) AND
+        (v1.year = &v_Year) AND
+        (v1.month = &v_Month1) AND
+        (c.state = v2.state) AND
+        (v2.year = &v_Year) AND
+        (v2.month = &v_Month2)
+ORDER BY Growth_Rate DESC;
+
+CLEAR COLUMNS
+TTITLE OFF
+
+
+-- ================ Sample Input =================
+-- Year : 2017
+-- 1st Month: 1 (January)
+-- 2nd Month: 2 (February)
+
+-- ===============================================
+
+
+-- Logic --- 
+
+-- List ALL
+--       |           1st Year         |         Second Year 
+-- State | Total Orders | Total Sales | Total Orders | Total Sales
+
+-- >> From Customer View Input Month, Year
+-- SELECT c.state,
+--        EXTRACT(MONTH FROM o.orderDate) MONTH,
+--        CONCAT('   RM', TO_CHAR(SUM(o.subtotal), '999,999.99')) AS total_sales
+-- FROM   customers c, orders o
+-- WHERE  c.customerId = o.customerId AND
+--        EXTRACT(YEAR FROM o.orderDate) = 2017 AND
+--        EXTRACT(MONTH FROM o.orderDate) = 2
+-- GROUP BY c.state, EXTRACT(MONTH FROM o.orderDate)
+-- ORDER BY EXTRACT(MONTH FROM o.orderDate), total_sales DESC;
+
+
+-- ====================Final Result======================
+
+-- SELECT DISTINCT c.state, v1.total_sales, v2.total_sales
+-- FROM   customers c, views_TotalSales_By_Customer_Locations v1, views_TotalSales_By_Customer_Locations v2
+-- WHERE   (c.state = v1.state) AND
+--         (v1.year = 2017) AND
+--         (v1.month = 1) AND
+--         (c.state = v2.state) AND
+--         (v2.year = 2017) AND
+--         (v2.month = 2)
+-- ORDER BY v2.total_sales DESC;
+
+
+-- =======================================================
