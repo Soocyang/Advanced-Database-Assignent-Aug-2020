@@ -36,6 +36,6 @@ SQL > start {file_path/drag n drop here}
 ```
 
 ## Set Page and Line Size
-set linesize 120
+set linesize 120 / 200
 set pagesize 35
 set serveroutput on format wrap
