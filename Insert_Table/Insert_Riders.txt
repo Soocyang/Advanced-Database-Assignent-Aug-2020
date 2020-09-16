@@ -1,4 +1,12 @@
+DROP SEQUENCE rider_seq;
 DROP TABLE riders;
+
+CREATE SEQUENCE rider_seq
+  MINVALUE 1001
+  MAXVALUE 9999
+  START WITH 1001
+  INCREMENT BY 1
+  NOCACHE;
 
 CREATE TABLE riders(
     riderId    number(11)   NOT NULL,
@@ -8,46 +16,46 @@ CREATE TABLE riders(
     PRIMARY KEY (riderId)
 );
 
-insert into riders values(1001,'Haji Wan Isma bin Shah','+60154355431','Wilayah Persekutuan');
-insert into riders values(1002,'Magendran Periasamy','+60130784739','Selangor');
-insert into riders values(1003,'Haji Jamalludin bin Dzulkarnaen Syafrin','+60191238978','Johor');
-insert into riders values(1004,'R. S. Nagaraj','+60138379852','WP Putrajaya');
-insert into riders values(1005,'Naraina a/l Ninian Bastianpillai','+60159394559','Penang');
-insert into riders values(1006,'Tatparanandam a/l Vishnu','+60195253739','Kedah');
-insert into riders values(1007,'Muhammed Hj Syed Muhd bin Arief','+60169361069','Kelantan');
-insert into riders values(1008,'Cheam Fey Tuk','+60166865340','Wilayah Persekutuan');
-insert into riders values(1009,'Gary Ngeow Jan Ziang','+60193310644','Selangor');
-insert into riders values(1010,'Muhamad Hj Syed Nasaruddin bin Isa','+60142417000','Johor');
-insert into riders values(1011,'D. S. Krishnasamy','+60143364784','WP Putrajaya');
-insert into riders values(1012,'Mohd Syed Shahru Kamarul bin Nik Taufek','+60158710604','Penang');
-insert into riders values(1013,'Kasi Thajudeen a/l Sanisvara Rasiah','+60143787434','Kedah');
-insert into riders values(1014,'Kavidhai a/l Mahathir Asirvatham','+60183295504','Kelantan');
-insert into riders values(1015,'Au-Yong Gu Liau','+60140518433','Wilayah Persekutuan');
-insert into riders values(1016,'Mohamad Syahriman Yuszelan bin Azely','+60131854983','Selangor');
-insert into riders values(1017,'Alex Gnai Jet Thu','+60146057709','Johor');
-insert into riders values(1018,'Au Geng Jiong','+60192545469','WP Putrajaya');
-insert into riders values(1019,'Nik Safie bin Syed Shaifuddin','+60118164014','Penang');
-insert into riders values(1020,'Dzulfikri Zainul-''alam bin Izz Safrifarizal','+60188251872','Kedah');
-insert into riders values(1021,'Mohammed Zufayri bin Ab Hasri','+60184662411','Kelantan');
-insert into riders values(1022,'Siauw Lat Lat','+60165876838','Wilayah Persekutuan');
-insert into riders values(1023,'M. G. Vijandren','+60198364233','Selangor');
-insert into riders values(1024,'Muhammet Syed Azib Zam bin Shahrol Iman','+60117546730','Johor');
-insert into riders values(1025,'Ruknuddin Wasil bin Wan Ghazi','+60129724944','WP Putrajaya');
-insert into riders values(1026,'Ramesh Saunthararajah a/l Jegathesan Shree','+60180478867','Penang');
-insert into riders values(1027,'Pria a/l Chakra Shivraj','+60136463674','Kedah');
-insert into riders values(1028,'Wong Vin Fok','+60111980725','Kelantan');
-insert into riders values(1029,'Koh Lat Tek','+60189539101','Wilayah Persekutuan');
-insert into riders values(1030,'Samy a/l Huzir Shanmuganathan','+60131191145','Selangor');
-insert into riders values(1031,'N. Sasikumar','+60191246320','Johor');
-insert into riders values(1032,'Sittampalam Puaneswaran a/l Chanturu Tikaram','+60115556209','WP Putrajaya');
-insert into riders values(1033,'Haji Iwan Farhan bin Che Zuheeryrizal','+60190927177','Penang');
-insert into riders values(1034,'Mohamad Wan Zairy Amsyar bin Ishak Suraji','+60184269738','Kedah');
-insert into riders values(1035,'Renuga Arujunan a/l Veetil','+60176061060','Kelantan');
-insert into riders values(1036,'Veloo Sivalingam a/l Jeyakumar Marimuthu','+60112892781','Wilayah Persekutuan');
-insert into riders values(1037,'Soo Chai Tim','+60145045612','Selangor');
-insert into riders values(1038,'Lok Tien Chau','+60198771921','Johor');
-insert into riders values(1039,'Quan Yeo Zau','+60133538793','WP Putrajaya');
-insert into riders values(1040,'Mohamed Zulhelmi Syafrin bin Che Jamekon','+60179657817','Penang');
+insert into riders values(rider_seq.NEXTVAL,'Haji Wan Isma bin Shah','+60154355431','Wilayah Persekutuan');
+insert into riders values(rider_seq.NEXTVAL,'Magendran Periasamy','+60130784739','Selangor');
+insert into riders values(rider_seq.NEXTVAL,'Haji Jamalludin bin Dzulkarnaen Syafrin','+60191238978','Johor');
+insert into riders values(rider_seq.NEXTVAL,'R. S. Nagaraj','+60138379852','WP Putrajaya');
+insert into riders values(rider_seq.NEXTVAL,'Naraina a/l Ninian Bastianpillai','+60159394559','Penang');
+insert into riders values(rider_seq.NEXTVAL,'Tatparanandam a/l Vishnu','+60195253739','Kedah');
+insert into riders values(rider_seq.NEXTVAL,'Muhammed Hj Syed Muhd bin Arief','+60169361069','Kelantan');
+insert into riders values(rider_seq.NEXTVAL,'Cheam Fey Tuk','+60166865340','Wilayah Persekutuan');
+insert into riders values(rider_seq.NEXTVAL,'Gary Ngeow Jan Ziang','+60193310644','Selangor');
+insert into riders values(rider_seq.NEXTVAL,'Muhamad Hj Syed Nasaruddin bin Isa','+60142417000','Johor');
+insert into riders values(rider_seq.NEXTVAL,'D. S. Krishnasamy','+60143364784','WP Putrajaya');
+insert into riders values(rider_seq.NEXTVAL,'Mohd Syed Shahru Kamarul bin Nik Taufek','+60158710604','Penang');
+insert into riders values(rider_seq.NEXTVAL,'Kasi Thajudeen a/l Sanisvara Rasiah','+60143787434','Kedah');
+insert into riders values(rider_seq.NEXTVAL,'Kavidhai a/l Mahathir Asirvatham','+60183295504','Kelantan');
+insert into riders values(rider_seq.NEXTVAL,'Au-Yong Gu Liau','+60140518433','Wilayah Persekutuan');
+insert into riders values(rider_seq.NEXTVAL,'Mohamad Syahriman Yuszelan bin Azely','+60131854983','Selangor');
+insert into riders values(rider_seq.NEXTVAL,'Alex Gnai Jet Thu','+60146057709','Johor');
+insert into riders values(rider_seq.NEXTVAL,'Au Geng Jiong','+60192545469','WP Putrajaya');
+insert into riders values(rider_seq.NEXTVAL,'Nik Safie bin Syed Shaifuddin','+60118164014','Penang');
+insert into riders values(rider_seq.NEXTVAL,'Dzulfikri Zainul-''alam bin Izz Safrifarizal','+60188251872','Kedah');
+insert into riders values(rider_seq.NEXTVAL,'Mohammed Zufayri bin Ab Hasri','+60184662411','Kelantan');
+insert into riders values(rider_seq.NEXTVAL,'Siauw Lat Lat','+60165876838','Wilayah Persekutuan');
+insert into riders values(rider_seq.NEXTVAL,'M. G. Vijandren','+60198364233','Selangor');
+insert into riders values(rider_seq.NEXTVAL,'Muhammet Syed Azib Zam bin Shahrol Iman','+60117546730','Johor');
+insert into riders values(rider_seq.NEXTVAL,'Ruknuddin Wasil bin Wan Ghazi','+60129724944','WP Putrajaya');
+insert into riders values(rider_seq.NEXTVAL,'Ramesh Saunthararajah a/l Jegathesan Shree','+60180478867','Penang');
+insert into riders values(rider_seq.NEXTVAL,'Pria a/l Chakra Shivraj','+60136463674','Kedah');
+insert into riders values(rider_seq.NEXTVAL,'Wong Vin Fok','+60111980725','Kelantan');
+insert into riders values(rider_seq.NEXTVAL,'Koh Lat Tek','+60189539101','Wilayah Persekutuan');
+insert into riders values(rider_seq.NEXTVAL,'Samy a/l Huzir Shanmuganathan','+60131191145','Selangor');
+insert into riders values(rider_seq.NEXTVAL,'N. Sasikumar','+60191246320','Johor');
+insert into riders values(rider_seq.NEXTVAL,'Sittampalam Puaneswaran a/l Chanturu Tikaram','+60115556209','WP Putrajaya');
+insert into riders values(rider_seq.NEXTVAL,'Haji Iwan Farhan bin Che Zuheeryrizal','+60190927177','Penang');
+insert into riders values(rider_seq.NEXTVAL,'Mohamad Wan Zairy Amsyar bin Ishak Suraji','+60184269738','Kedah');
+insert into riders values(rider_seq.NEXTVAL,'Renuga Arujunan a/l Veetil','+60176061060','Kelantan');
+insert into riders values(rider_seq.NEXTVAL,'Veloo Sivalingam a/l Jeyakumar Marimuthu','+60112892781','Wilayah Persekutuan');
+insert into riders values(rider_seq.NEXTVAL,'Soo Chai Tim','+60145045612','Selangor');
+insert into riders values(rider_seq.NEXTVAL,'Lok Tien Chau','+60198771921','Johor');
+insert into riders values(rider_seq.NEXTVAL,'Quan Yeo Zau','+60133538793','WP Putrajaya');
+insert into riders values(rider_seq.NEXTVAL,'Mohamed Zulhelmi Syafrin bin Che Jamekon','+60179657817','Penang');
 
 
 column RIDERNAME format a50
