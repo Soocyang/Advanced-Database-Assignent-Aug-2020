@@ -14,7 +14,7 @@ BEGIN
  v_subtotal := :new.quantityOrdered * :new.priceEach;
 
     DBMS_OUTPUT.PUT_LINE (chr(10));
-    DBMS_OUTPUT.PUT_LINE('Total of this order : ' || v_subtotal);
+    DBMS_OUTPUT.PUT_LINE('Total of this order: RM' || v_subtotal);
 
     SELECT subtotal INTO v_newsub
     FROM orders
@@ -22,12 +22,17 @@ BEGIN
 
     v_newsub := v_newsub + v_subtotal;
 
-    DBMS_OUTPUT.PUT_LINE('After add: ' || v_newsub);
+    DBMS_OUTPUT.PUT_LINE('After add: RM' || v_newsub);
 
     UPDATE orders
     SET subtotal = v_newsub
     WHERE orderId = :new.orderId;
     DBMS_OUTPUT.PUT_LINE('Subtotal of the order has been updated');
+
+    EXCEPTION 
+        WHEN NO_DATA_FOUND THEN
+            raise_application_error (-20018,'No records found for the order id.');
+
 
 END;
 /

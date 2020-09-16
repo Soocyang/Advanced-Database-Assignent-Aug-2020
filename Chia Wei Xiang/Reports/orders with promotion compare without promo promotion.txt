@@ -1,6 +1,11 @@
+set linesize 200
+set pagesize 200
+set serveroutput on
 CREATE OR REPLACE PROCEDURE report_strategic(IN_Year IN VARCHAR)
 IS
 
+    v_totalpromo    number := 0;
+    v_totalwithoutpromo number := 0;
     v_totalvalue     number := 0;
     v_totalvaluewithoutp     number := 0;
     v_percent     number := 0;
@@ -12,13 +17,14 @@ IS
     e_invalidYear    EXCEPTION;
 
     CURSOR Report_Cursor IS
-        SELECT v1.month, v1.TOTAL_SALES AS Promo_sales, v2.TOTAL_SALES AS Without_promo
-            , (((v2.TOTAL_SALES-v1.TOTAL_SALES)/v1.TOTAL_SALES)*100) AS DIFF
+        SELECT v1.month, v1.TOTAL_ORDERS, v1.TOTAL_SALES AS Promo_sales, 
+            v2.TOTAL_WITHOUT_ORDERS, v2.TOTAL_SALES AS WITHOUT_PROMO, 
+            (((v2.TOTAL_SALES-v1.TOTAL_SALES)/v1.TOTAL_SALES)*100) AS DIFF
         FROM v_promo_sales1 v1, v_promo_sales2 v2
         WHERE v1.month = v2.month AND
-            v1.year = v2.year AND
-            v1.year = IN_Year AND
-            v2.year = IN_Year
+                v1.year = v2.year AND
+                v1.year = IN_Year AND
+                v2.year = IN_Year
         ORDER BY to_char(to_date(v1.Month,'MONTH'),'MM');
 
     Report_rec Report_Cursor%ROWTYPE;
@@ -56,13 +62,17 @@ BEGIN
          -- COLUMNS HEADERS
             DBMS_OUTPUT.PUT_LINE(CHR(10));
             DBMS_OUTPUT.PUT_LINE(RPAD('Month', 20, ' ')||
-                                    RPAD('Sales with Promotion', 20, ' ')||
+                                    RPAD('Total with Promotion', 22, ' ')||
+                                    RPAD('Sales with Promotion', 22, ' ')||
+                                    RPAD('Total without Promotion', 25, ' ')||
                                     RPAD('Sales without Promotion', 25,' ')||
                                     RPAD('Different(%)', 13,' '));
 
             -- COLUMNS SEPERATOR 
             DBMS_OUTPUT.PUT_LINE(RPAD('=', 19 ,'=')||' '||
-                                RPAD('=', 19 ,'=')||' '||
+                                RPAD('=', 21 ,'=')||' '||
+                                RPAD('=', 21 ,'=')||' '||
+                                RPAD('=', 24 ,'=')||' '||
                                 RPAD('=', 24 ,'=')||' '||
                                 RPAD('=', 12 ,'=')||' ');
             v_loop := 0;
@@ -72,11 +82,15 @@ BEGIN
 
         -- PRINT RECORD
             DBMS_OUTPUT.PUT_LINE( RPAD(Report_rec.month, 20, ' ')|| 
-                                RPAD('RM'||TO_CHAR(Report_rec.Promo_sales, 999999.99), 20, ' ')|| 
+                                RPAD(Report_rec.TOTAL_ORDERS, 22, ' ')||
+                                RPAD('RM'||TO_CHAR(Report_rec.Promo_sales, 999999.99), 22, ' ')|| 
+                                RPAD(Report_rec.TOTAL_WITHOUT_ORDERS, 25, ' ')||
                                 RPAD('RM'||TO_CHAR(Report_rec.Without_promo, 999999.99), 25, ' ')|| 
                                 RPAD(TO_CHAR(Report_rec.DIFF, 999.99), 10,' ') || '%');
             v_loop := v_loop + 1;
 
+    v_totalpromo := v_totalpromo + Report_rec.TOTAL_ORDERS;
+    v_totalwithoutpromo := v_totalwithoutpromo + Report_rec.TOTAL_WITHOUT_ORDERS;
     v_totalvalue := v_totalvalue + Report_rec.Promo_sales;
     v_totalvaluewithoutp := v_totalvaluewithoutp + Report_rec.Without_promo;
     v_percent := ((v_totalvaluewithoutp-v_totalvalue)/v_totalvalue)*100;
@@ -84,8 +98,9 @@ BEGIN
 
     END LOOP;
     
-    DBMS_OUTPUT.PUT_LINE(RPAD(' *',20,'*')||RPAD(' *',20,'*')||RPAD(' *',25,'*')||RPAD(' *',13,'*'));
-    DBMS_OUTPUT.PUT_LINE('Total Value: '||LPAD(' ',7,' ')||RPAD('RM '||TO_CHAR(v_totalvalue, 999999.99), 15, ' ')||LPAD(' ',5,' ')||RPAD('RM '||TO_CHAR(v_totalvaluewithoutp, 999999.99), 15, ' ')||LPAD(' ',10,' ')||RPAD(TO_CHAR(v_percent, 999.99), 10, ' ')|| '%');
+    DBMS_OUTPUT.PUT_LINE(RPAD(' *',20,'*')||RPAD(' *',22,'*')||RPAD(' *',22,'*')||RPAD(' *',25,'*')||RPAD(' *',25,'*')||RPAD(' *',13,'*'));
+
+    DBMS_OUTPUT.PUT_LINE('Total Value: '||LPAD(' ',7,' ')||RPAD(v_totalpromo, 10, ' ')||LPAD(' ',12,' ')||RPAD('RM '||TO_CHAR(v_totalvalue, 999999.99), 15, ' ')||LPAD(' ',7,' ')||RPAD(v_totalwithoutpromo, 10, ' ')||LPAD(' ',15,' ')||RPAD('RM '||TO_CHAR(v_totalvaluewithoutp, 999999.99), 15, ' ')||LPAD(' ',10,' ')||RPAD(TO_CHAR(v_percent, 999.99), 10, ' ')|| '%');
     DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',48,' ') ||'-END of REPORT-');
 
 EXCEPTION

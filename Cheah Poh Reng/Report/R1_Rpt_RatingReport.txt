@@ -1,0 +1,129 @@
+CREATE OR REPLACE VIEW views_overall_rating_by_year AS
+	Select r.restaurantName AS RESTAURANT_NAME,
+	       EXTRACT(YEAR FROM o.orderDate) AS year,
+	       COUNT(DISTINCT
+		  CASE
+			WHEN r.restaurantId = m.restaurantId AND
+	  		     m.menuId = od.menuId AND
+                             od.orderId = o.orderId AND	  
+                             o.orderId = re.orderId
+			THEN reviewId 
+			ELSE NULL
+		   END
+	       ) AS TOTAL_REVIEW,
+	       COUNT(O.ORDERID) AS TOTAL_ORDER,
+	       SUM(re.rating)/COUNT(re.rating) AS OVERALL_RATING
+        From   Restaurant r, Menu m, orderDetails od, orders o, reviews re
+        Where  r.restaurantId = m.restaurantId AND
+	       m.menuId = od.menuId AND
+               od.orderId = o.orderId AND	 
+               o.orderId = re.orderId
+        GROUP BY r.restaurantName,EXTRACT(YEAR FROM o.orderDate);
+
+cl scr
+
+CREATE OR REPLACE PROCEDURE orderRatingReport(IN_above_rating IN number,
+					      IN_first_year IN number,
+                                              IN_second_year IN number,
+                                              IN_third_year IN number) IS
+
+v_pageCount NUMBER := 1;
+v_loop NUMBER := 0;
+v_overall number := 0;
+V_TOTAL_REVIEW number := 0;
+V_TOTAL_ORDER number := 0;
+v_overall_all number := 0;
+
+CURSOR REVIEW_CURSOR IS
+  SELECT r.restaurantName as RESTAURANT_NAME, 
+         to_char(v1.OVERALL_RATING,'9.9') as Year_1,
+         to_char(v2.OVERALL_RATING,'9.9') as Year_2,
+         to_char(v3.OVERALL_RATING,'9.9') as Year_3,
+         v1.TOTAL_ORDER as order_year_1,
+	 v1.TOTAL_REVIEW as review_year_1,
+         v2.TOTAL_ORDER as order_year_2,
+	 v2.TOTAL_REVIEW as review_year_2,
+         v3.TOTAL_ORDER as order_year_3,
+	 v3.TOTAL_REVIEW as review_year_3
+  From   Restaurant r,
+         views_overall_rating_by_year v1,
+         views_overall_rating_by_year v2,
+         views_overall_rating_by_year v3
+  WHERE  (r.restaurantName = v1.RESTAURANT_NAME) AND
+         (v1.year = IN_first_year) AND
+         (r.restaurantName = v2.RESTAURANT_NAME) AND
+         (v2.year = IN_SECOND_year) AND
+         (r.restaurantName = v3.RESTAURANT_NAME) AND
+         (v3.year = IN_third_year);	
+
+review_rec REVIEW_CURSOR%ROWTYPE;
+
+BEGIN
+DBMS_OUTPUT.PUT_LINE(CHR(10));
+    DBMS_OUTPUT.PUT_LINE('             '||LPAD(' ',36,' ')||' Restaurants Review Rating Report');
+    DBMS_OUTPUT.PUT_LINE('             '||LPAD(' ',36,' ')||LPAD('=',34,'='));
+
+	SELECT COUNT(REVIEWID)
+	INTO V_TOTAL_REVIEW
+	FROM REVIEWS;
+
+	SELECT COUNT(ORDERID)
+	INTO V_TOTAL_ORDER
+	FROM ORDERS;             
+	
+
+    OPEN REVIEW_CURSOR;
+    LOOP
+    FETCH REVIEW_CURSOR INTO review_rec;
+    EXIT WHEN REVIEW_CURSOR%NOTFOUND;
+
+        IF(v_loop = 0 OR v_loop = 20) THEN
+            DBMS_OUTPUT.PUT_LINE(CHR(10));
+            DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
+                                 RPAD(TO_CHAR(sysdate,'dd/mm/yyyy'), 10, ' ')||
+                                 RPAD(' ', 90, ' ')||
+                                 'Page: '||LPAD(v_pageCount, 1, ' '));
+           DBMS_OUTPUT.PUT_LINE(CHR(10));
+           DBMS_OUTPUT.PUT_LINE('Restaurant Name                              '||IN_first_year||'   '||'% OF RATING'||'   '
+									       ||IN_second_year||'   '||'% OF RATING'||'   '
+	       								       ||IN_third_year||'   '||'% OF RATING'||'   '
+									       ||'OVERALL RATING      ');
+           DBMS_OUTPUT.PUT_LINE('==========================================='||
+				' ======'||' ============='||
+				' ======'||' ============='||
+				' ======'||' ============='||
+				' ================');   
+            v_loop := 0;
+            v_pageCount := v_pageCount + 1;
+        END IF;
+	
+	v_overall := (review_rec.Year_1+review_rec.Year_2+review_rec.Year_3)/3;
+	IF(v_overall >= IN_above_rating) THEN
+                 DBMS_OUTPUT.PUT_LINE(RPAD(review_rec.RESTAURANT_NAME,44,' ')||
+                                      LPAD(review_rec.Year_1,4, ' ')||
+                                      LPAD(to_char((review_rec.review_year_1/review_rec.order_year_1)*100,'99'),10, ' ')||'%'||
+                                      LPAD(review_rec.Year_2,10, ' ')||
+                                      LPAD(to_char((review_rec.review_year_2/review_rec.order_year_2)*100,'99'),10, ' ')||'%'||
+                                      LPAD(review_rec.Year_3,10, ' ')||
+                                      LPAD(to_char((review_rec.review_year_3/review_rec.order_year_3)*100,'99'),10, ' ')||'%'||     
+			              LPAD(TO_CHAR(((review_rec.Year_1+review_rec.Year_2+review_rec.Year_3)/3),'99.9'),15,' ')||' ');
+	         v_loop := v_loop + 1;
+	END IF;
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('==========================================================='||
+			 '=================================================================
+			');
+    DBMS_OUTPUT.PUT_LINE('=========================================================== S U M M A R Y '||
+			 '==================================================');
+    DBMS_OUTPUT.PUT_LINE('                                     
+			 '||
+			 '               Overall of restaurant that above '||IN_above_rating||' have '||v_loop||' Restaurants');
+    DBMS_OUTPUT.PUT_LINE('                         '||
+			 '               Among '||V_TOTAL_ORDER||' orders have '||V_TOTAL_REVIEW||' make review:'
+			||to_char((V_TOTAL_REVIEW/V_TOTAL_ORDER)*100,'99.99')||'%');
+    DBMS_OUTPUT.PUT_LINE('==========================================================='||
+			 '=================================================================');
+END;
+/
+
+exec orderRatingReport(2,2017,2018,2019);

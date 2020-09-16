@@ -1,8 +1,14 @@
-CREATE OR REPLACE PROCEDURE report_tactical(IN_Month IN VARCHAR, IN_Year IN VARCHAR)
+set linesize 200
+set pagesize 200
+set serveroutput on
+CREATE OR REPLACE PROCEDURE report_tactical(IN_Month IN VARCHAR, IN_Year IN VARCHAR, IN_row IN VARCHAR)
 IS
 
     v_high_id       number := 0;
     v_high_value       number := 0;
+    v_month_sales   number := 0;
+    v_month_sales_without_promo   number := 0;
+    v_proportion    number := 0;
 
     v_pageCount     number := 1;
     V_loop          number := 0;
@@ -11,7 +17,7 @@ IS
     e_invalidYear    EXCEPTION;
 
     CURSOR Report_Cursor IS
-        SELECT p.PromoId, p.promoDesc, p.discountRate, COUNT(o.orderId) as USEDTIME, SUM(o.subtotal) AS VALUEEARN,
+        SELECT p.PromoId, p.promoDesc, p.discountRate*100 AS rate, COUNT(o.orderId) as USEDTIME, SUM(o.subtotal) AS VALUEEARN,
         SUM(o.subtotal*(1-p.discountRate)) AS AFTERDIS
         FROM orders o, promotion p
         WHERE o.promoId = p.promoId AND
@@ -19,7 +25,7 @@ IS
             EXTRACT(YEAR FROM o.orderDate) = IN_Year 
         GROUP BY p.PromoId, p.promoDesc, p.discountRate
         ORDER By USEDTIME DESC
-        FETCH next 10 row only;
+        FETCH next IN_row row only;
     Report_rec Report_Cursor%ROWTYPE;
 
 
@@ -33,11 +39,21 @@ BEGIN
         END IF;
     END IF;
 
+    SELECT SUM(o.subtotal), SUM(o.subtotal*(1-p.discountRate)) INTO v_month_sales, v_month_sales_without_promo
+    FROM orders o, promotion p
+    WHERE o.promoId = p.promoId AND
+        EXTRACT(MONTH FROM o.orderDate) = IN_Month AND
+        EXTRACT(YEAR FROM o.orderDate) = IN_Year;
+
+    -- SELECT SUM(o.subtotal) AS VALUEEARN
+    --     FROM orders o
+    --     WHERE EXTRACT(MONTH FROM o.orderDate) = '02' AND
+    --         EXTRACT(YEAR FROM o.orderDate) = '2017';
 
     -- REPORT HEADER
     DBMS_OUTPUT.PUT_LINE(chr(10));
     DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',48,' ') ||'TACTICAL REPORT');
-    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',28,' ') ||'CUSTOMERS REPORT - TOP 10 PROMOTION CODE');
+    DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',28,' ') ||'CUSTOMERS REPORT - TOP '||IN_row||' PROMOTION CODE OF '|| IN_Month ||'/'||IN_Year);
     DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',28,' ') || LPAD('=',50,'='));
 
     -- OPEN QUERY 
@@ -59,18 +75,20 @@ BEGIN
             DBMS_OUTPUT.PUT_LINE(CHR(10));
             DBMS_OUTPUT.PUT_LINE(RPAD('Promotion ID', 14, ' ')||
                                     RPAD('Promotion Description', 50, ' ')||
-                                    RPAD('Discount Rate', 15, ' ') ||
-                                    RPAD('Total Used', 12, ' ') ||
-                                    RPAD('Value Earn', 12,' ')||
-                                    RPAD('After Discount', 16,' '));
+                                    RPAD('Discount Rate(%)', 19, ' ') ||
+                                    RPAD('Total Used', 13, ' ') ||
+                                    RPAD('Value Earn', 13,' ')||
+                                    RPAD('After Discount', 16,' ')||
+                                    RPAD('Percentage taken on sales', 25,' '));
 
             -- COLUMNS SEPERATOR 
             DBMS_OUTPUT.PUT_LINE(RPAD('=', 13 ,'=')||' '||
                                 RPAD('=', 49 ,'=')||' '||
-                                RPAD('=', 14 ,'=')||' '||
-                                RPAD('=', 11 ,'=')||' '||
-                                RPAD('=', 11 ,'=')||' '||
-                                RPAD('=', 15 ,'=')||' ');
+                                RPAD('=', 17 ,'=')||' '||
+                                RPAD('=', 12 ,'=')||' '||
+                                RPAD('=', 12 ,'=')||' '||
+                                RPAD('=', 16 ,'=')||' '||
+                                RPAD('=', 26 ,'=')||' ');
             v_loop := 0;
             v_pageCount := v_pageCount + 1;
 
@@ -79,14 +97,18 @@ BEGIN
 --         SELECT p.PromoId, p.promoDesc, p.discountRate,
 -- COUNT(o.orderId) as USEDTIME, SUM(o.subtotal) AS VALUEEARN, 
 -- SUM(o.subtotal*(1-p.discountRate)) AS AFTERDIS 
-
+    v_proportion := (Report_rec.AFTERDIS / v_month_sales_without_promo)*100;
         -- PRINT RECORD
             DBMS_OUTPUT.PUT_LINE( RPAD(Report_rec.PromoId, 14, ' ')|| 
                                 RPAD(Report_rec.promoDesc, 50, ' ')|| 
-                                RPAD(Report_rec.discountRate, 15, ' ')|| 
-                                RPAD(Report_rec.USEDTIME, 12, ' ')|| 
-                                RPAD('RM '||Report_rec.VALUEEARN, 12,' ')|| 
-                                RPAD('RM '||Report_rec.AFTERDIS, 16,' '));
+                                RPAD(' ', 5, ' ')||
+                                LPAD(Report_rec.rate, 4, ' ')||' % '||
+                                RPAD(' ', 11, ' ')||
+                                RPAD(Report_rec.USEDTIME, 8, ' ')|| 
+                                RPAD('RM '||TO_CHAR(Report_rec.VALUEEARN, 9999.99), 16,' ')|| 
+                                RPAD('RM '||TO_CHAR(Report_rec.AFTERDIS, 9999.99), 14,' ')||
+                                RPAD(' ', 7, ' ')||
+                                RPAD(TO_CHAR(v_proportion, 990.99), 8,' ')||'%');
             v_loop := v_loop + 1;
 
     END LOOP;
@@ -100,8 +122,11 @@ BEGIN
         ORDER By AFTERDIS DESC
         FETCH next 1 row only;
 
-    DBMS_OUTPUT.PUT_LINE(RPAD(' *', 14 ,'*')||RPAD(' *', 50 ,'*')||RPAD(' *', 15 ,'*')|| RPAD(' *',12,'*')||RPAD(' *', 11 ,'*')|| RPAD(' *',16,'*'));
-    DBMS_OUTPUT.PUT_LINE('The promotion id '||v_high_id|| ' has bring the highest value earn RM ' ||v_high_value);
+    DBMS_OUTPUT.PUT_LINE(RPAD(' *', 14 ,'*')||RPAD(' *', 50 ,'*')||RPAD(' *', 18 ,'*')|| RPAD(' *',13,'*')||RPAD(' *', 13 ,'*')|| RPAD(' *',17,'*')|| RPAD(' *',27,'*'));
+    DBMS_OUTPUT.PUT_LINE(chr(13)||LPAD(' ',84,' ') ||'Total month sales without discount of '|| IN_Month ||'/'||IN_Year||': RM'||TO_CHAR(v_month_sales, 999999.99) );
+    DBMS_OUTPUT.PUT_LINE(chr(13)||LPAD(' ',77,' ') ||'Total month sales after received discount of '|| IN_Month ||'/'||IN_Year||': RM'||TO_CHAR(v_month_sales_without_promo, 999999.99));
+    DBMS_OUTPUT.PUT_LINE('The promotion id '||v_high_id|| ' has bring the value earn RM ' ||TO_CHAR(v_high_value, 999999.99)||' that highest than other promotion id');
+
     
     DBMS_OUTPUT.PUT_LINE(' ');
     DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',48,' ') ||'-END of REPORT-');
@@ -117,6 +142,6 @@ EXCEPTION
 END;
 /
 
-exec report_tactical(01,2017);
+exec report_tactical(01,2017,10);
 
 

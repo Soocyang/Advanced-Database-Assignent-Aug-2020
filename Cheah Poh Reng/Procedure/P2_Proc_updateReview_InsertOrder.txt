@@ -1,0 +1,110 @@
+ALTER SESSION SET NLS_DATE_FORMAT='DD/MM/YYYY HH24:MI';
+
+cl scr
+
+CREATE OR REPLACE PROCEDURE update_review(IN_REVIEWID IN VARCHAR) IS
+    v_currentReorder varchar(10);
+    v_oppositeReorder varchar(10);
+    v_temp_reviewId NUMBER(11);
+    v_temp_reorder VARCHAR(10);
+    v_temp_orderId NUMBER(11);
+    v_reorder_menu NUMBER(11);
+    v_reorder_qty NUMBER(4);
+    v_reorder_price NUMBER(7,2);
+    v_max_orderId number(11);
+    v_orderId number(11);
+    v_custId number(11);
+    v_status VARCHAR(15);
+    v_estimateTime Date;
+    v_custIDD number(11);
+    v_sub number(9,2);
+    v_payMethod varchar(30);
+    v_deliFee number(5,2);
+    v_rId number(11);
+
+CURSOR history_CURSOR IS
+    SELECT menuId, quantityOrdered, priceEach      
+    From orderDetails
+    WHERE orderId = v_temp_orderId;
+	
+history_rec history_CURSOR%ROWTYPE;
+
+BEGIN
+
+    SELECT reviewId, reorder, orderId
+    INTO v_temp_reviewId, v_temp_reorder, v_temp_orderId
+    FROM reviews
+    WHERE reviewId = IN_REVIEWID; 
+	
+    DBMS_OUTPUT.PUT_LINE ('Review ID        : ' || IN_REVIEWID);
+    DBMS_OUTPUT.PUT_LINE ('Reorder Order ID : ' || v_temp_orderId); 
+   
+    IF  v_temp_reorder = 'Yes' THEN
+	v_currentReorder := 'Yes';
+	v_oppositeReorder := 'Yes';
+    ELSE
+	v_currentReorder := 'No';
+	v_oppositeReorder := 'Yes';
+        DBMS_OUTPUT.PUT_LINE ('==========================================================='); 
+        DBMS_OUTPUT.PUT_LINE ('Changing Reorder from '|| v_currentReorder ||' to '|| v_oppositeReorder);
+    END IF;  
+
+    DBMS_OUTPUT.PUT_LINE ('===========================================================');
+    DBMS_OUTPUT.PUT_LINE ('         ===============REORDERING===============');
+
+    Select Max(orderId)
+    INTO v_max_orderId
+    From orders;
+
+    v_max_orderId := v_max_orderId + 1;
+    v_estimateTime := to_char(sysdate + (.000694 * 31), 'DD-MON-YYYY HH24:MI');
+
+
+
+    SELECT customerId,subtotal,paymentMethod,deliveryFees,riderId
+    INTO v_custIDD,v_sub,v_payMethod,v_deliFee,v_rId
+    From orders
+    WHERE orderId = v_temp_orderId;  
+      
+    insert into orders values(v_max_orderId,v_custIDD,NULL,v_rId,
+		             v_sub,v_payMethod,v_deliFee,'31/08/2020', 
+	                     'Delivered',v_estimateTime,
+	                     TO_DATE('22/01/2017 18:59:48', 'DD/MM/YYYY HH24:MI:SS'));
+      
+    
+    OPEN history_CURSOR;
+    LOOP
+     FETCH history_CURSOR INTO history_rec;
+     EXIT WHEN history_CURSOR%NOTFOUND;
+
+	 DBMS_OUTPUT.PUT_LINE ('                      Menu ID: ' || history_rec.menuId);
+         DBMS_OUTPUT.PUT_LINE ('                      Quantity : ' || history_rec.quantityOrdered);   
+         DBMS_OUTPUT.PUT_LINE ('                      Price : ' || history_rec.priceEach);   
+         DBMS_OUTPUT.PUT_LINE ('          --------------------------------------'); 
+     
+     insert into orderDetails values(v_max_orderId,history_rec.menuId,history_rec.quantityOrdered,history_rec.priceEach);           
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE ('===========================================================');
+
+    UPDATE Reviews SET Reorder = v_oppositeReorder WHERE reviewID = IN_REVIEWID;
+
+    Select orderId, customerId, status
+    INTO v_orderId,v_custId,v_status
+    From orders
+    WHERE orderID = v_max_orderId;
+
+    DBMS_OUTPUT.PUT_LINE ('         Thanks For Your Support!' ); 
+    DBMS_OUTPUT.PUT_LINE ('     Customer ID   : ' || v_custId);   
+    DBMS_OUTPUT.PUT_LINE ('     Order ID      : ' || v_orderId); 
+    DBMS_OUTPUT.PUT_LINE ('     Status        : ' || v_status); 
+    DBMS_OUTPUT.PUT_LINE ('     Estimate Time : ' || v_estimateTime);   
+    DBMS_OUTPUT.PUT_LINE ('===========================================================');
+    DBMS_OUTPUT.PUT_LINE ('REORDER SUCCESS');
+
+END;
+/
+
+exec update_review(100032)
+    
+    

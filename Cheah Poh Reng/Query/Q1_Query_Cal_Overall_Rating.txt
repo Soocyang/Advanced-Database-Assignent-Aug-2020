@@ -1,0 +1,48 @@
+cl scr
+ALTER SESSION SET NLS_DATE_FORMAT = 'DD/MM/YYYY HH24:MI';
+
+set linesize 250
+set pagesize 100 
+
+COLUMN RESTAURANT_NAME FORMAT a50;
+COLUMN OVERALL_RATING FORMAT 9.9;
+
+ACCEPT input_year CHAR PROMPT 'INPUT Year:'
+ACCEPT input_above NUMBER PROMPT 'RATING ABOVE(MAX 4):'
+
+    Select count(*) as total
+    From Reviews
+
+    Select r.restaurantName AS RESTAURANT_NAME,
+	   AVG(re.rating) AS OVERALL_RATING,
+	   COUNT(DISTINCT
+		CASE
+			WHEN r.restaurantId = m.restaurantId AND
+	  		     m.menuId = od.menuId AND
+                             od.orderId = o.orderId AND	  
+	                     EXTRACT(YEAR FROM re.reviewDate) = &input_year AND 
+                             o.orderId = re.orderId
+			THEN reviewId 
+			ELSE NULL
+		END
+	   ) AS TOTAL_REVIEW,
+	   COUNT(O.ORDERID) AS TOTAL_ORDER
+    From   Restaurant r, Menu m, orderDetails od, orders o, reviews re
+    Where  r.restaurantId = m.restaurantId AND
+	   m.menuId = od.menuId AND
+           od.orderId = o.orderId AND	  
+	   EXTRACT(YEAR FROM o.orderDate) = &input_year AND 
+           o.orderId = re.orderId
+    GROUP BY r.restaurantName
+    HAVING  AVG(re.rating) >= &input_above
+    ORDER BY OVERALL_RATING DESC;
+
+
+
+
+
+
+
+
+
+

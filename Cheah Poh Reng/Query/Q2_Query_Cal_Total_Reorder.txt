@@ -1,0 +1,39 @@
+cl scr
+ALTER SESSION SET NLS_DATE_FORMAT = 'DD/MM/YYYY HH24:MI';
+
+
+set linesize 150
+set pagesize 100 
+
+
+ACCEPT input_year CHAR PROMPT 'INPUT Year:'
+
+    Select r.restaurantName AS RESTAURANT_NAME,
+	   Count(DISTINCT
+		 CASE
+		      WHEN r.restaurantId = m.restaurantId AND
+	  	    	   m.menuId = od.menuId AND
+          	    	   od.orderId = o.orderId AND	  
+	   	   	   EXTRACT(YEAR FROM o.orderDate) = &input_year AND 
+           	    	   o.orderId = re.orderId AND
+	  	           re.reorder = 'Yes'
+		      THEN O.ORDERID
+		      ELSE NULL
+		END
+	   )AS TOTAL_REORDER,
+	   Count(o.orderid) AS TOTAL_ORDER
+    From   Restaurant r, Menu m, orderDetails od, orders o, reviews re
+    Where  r.restaurantId = m.restaurantId AND
+	   m.menuId = od.menuId AND
+           od.orderId = o.orderId AND	  
+	   EXTRACT(YEAR FROM o.orderDate) = &input_year AND 
+           o.orderId = re.orderId
+    GROUP BY r.restaurantName;
+
+
+
+
+
+
+
+

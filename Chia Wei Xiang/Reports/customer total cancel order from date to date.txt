@@ -1,3 +1,6 @@
+set linesize 200
+set pagesize 200
+set serveroutput on
 CREATE OR REPLACE PROCEDURE report_operation(IN_From_Date IN DATE,IN_To_Date IN DATE)
 IS
     v_freq_id        number := 0;
@@ -17,11 +20,12 @@ IS
     e_invalid_ToDate    EXCEPTION;
 
     CURSOR Report_Cursor IS
-        SELECT c.customerID, c.customerName, c.phone, c.email, o.orderID, o.subtotal, o.orderDate, o.status
+        SELECT c.customerID, c.customerName, COUNT(o.orderId) AS NO_OF_CANCELLATION, SUM(o.subtotal) AS VALUE_OF_ORDER
         FROM customers c, orders o
         WHERE c.customerId = o.customerId AND
             o.status = 'Cancelled' AND
             o.orderDate BETWEEN IN_From_Date AND IN_To_Date
+        GROUP BY c.customerID, c.customerName
         ORDER BY c.customerID;
 
     Report_rec Report_Cursor%ROWTYPE;
@@ -66,22 +70,14 @@ BEGIN
             DBMS_OUTPUT.PUT_LINE(CHR(10));
             DBMS_OUTPUT.PUT_LINE(RPAD('Customer ID', 14, ' ')||
                                     RPAD('Customer Name', 50, ' ')||
-                                    RPAD('Phone', 14, ' ') ||
-                                    RPAD('Email', 25,' ')||
-                                    RPAD('Order Id', 10,' ')||
-                                    RPAD('Subtotal', 10,' ')||
-                                    RPAD('Order Date', 12, ' ') ||
-                                    RPAD('Status', 12,' '));
+                                    RPAD('No of cancellation', 20, ' ') ||
+                                    RPAD('Value of orders', 17,' '));
 
             -- COLUMNS SEPERATOR 
             DBMS_OUTPUT.PUT_LINE(RPAD('=', 13 ,'=')||' '||
                                 RPAD('=', 49 ,'=')||' '||
-                                RPAD('=', 13 ,'=')||' '||
-                                RPAD('=', 24 ,'=')||' '||
-                                RPAD('=', 9 ,'=')||' '||
-                                RPAD('=', 9 ,'=')||' '||
-                                RPAD('=', 11 ,'=')||' '||
-                                RPAD('=', 11 ,'=')||' ');
+                                RPAD('=', 19 ,'=')||' '||
+                                RPAD('=', 16 ,'=')||' ');
             v_loop := 0;
             v_pageCount := v_pageCount + 1;
 
@@ -91,12 +87,8 @@ BEGIN
         -- PRINT RECORD
             DBMS_OUTPUT.PUT_LINE( RPAD(Report_rec.customerID, 14, ' ')|| 
                                 RPAD(Report_rec.customerName, 50, ' ')|| 
-                                RPAD(Report_rec.phone, 14, ' ')|| 
-                                RPAD(Report_rec.email, 25,' ')|| 
-                                RPAD(Report_rec.orderID, 10,' ')|| 
-                                RPAD(Report_rec.subtotal, 10,' ')||
-                                RPAD(Report_rec.orderDate, 12,' ')||
-                                RPAD(Report_rec.status, 12,' '));
+                                RPAD(Report_rec.NO_OF_CANCELLATION, 20, ' ')|| 
+                                RPAD(Report_rec.VALUE_OF_ORDER, 17,' '));
             v_loop := v_loop + 1;
     
     v_count := v_count + 1;
@@ -112,21 +104,22 @@ BEGIN
         ORDER BY COUNT(c.customerID) DESC
         FETCH next 1 row only;
 
-    SELECT c.customerID, c.customerName, MAX(o.subtotal) INTO v_high_id, v_high_name, v_high_count
+    SELECT c.customerID, c.customerName, o.subtotal INTO v_high_id, v_high_name, v_high_count
         FROM customers c, orders o
         WHERE c.customerId = o.customerId AND
             o.status = 'Cancelled' AND
             o.orderDate BETWEEN IN_From_Date AND IN_To_Date
-        GROUP BY c.customerID, c.customerName
-        ORDER BY COUNT(c.customerID) DESC
+        GROUP BY c.customerID, c.customerName, o.subtotal
+        ORDER BY o.subtotal DESC
         FETCH next 1 row only;
     
-    DBMS_OUTPUT.PUT_LINE(RPAD(' =',14,'=')||RPAD(' =',50,'=')||RPAD(' =',14,'=')||RPAD(' =',25,'=')||RPAD(' =', 10 ,'=')||RPAD(' =', 10 ,'=')||RPAD(' =', 12 ,'=')|| RPAD(' =',12,'='));
+    DBMS_OUTPUT.PUT_LINE(RPAD(' =',14,'=')||RPAD(' =',50,'=')||RPAD(' =',20,'=')||RPAD(' =',17,'='));
     DBMS_OUTPUT.PUT_LINE(chr(13));
+    DBMS_OUTPUT.PUT_LINE('Summary from '|| IN_From_Date || ' To ' || IN_To_Date );
     DBMS_OUTPUT.PUT_LINE('The customer '|| v_freq_id|| ' - '||v_freq_name||' has cancel his/her order '|| v_freq_count ||' times from '|| IN_From_Date || ' To ' || IN_To_Date ||'. He/She cancel thier orders most frequency');
     DBMS_OUTPUT.PUT_LINE('The customer '|| v_high_id|| ' - '||v_high_name||' has cancel his/her order that has highest amount RM'|| v_high_count ||' from '|| IN_From_Date || ' To ' || IN_To_Date ||'.');
-    DBMS_OUTPUT.PUT_LINE('The total cancel orders from '|| IN_From_Date || ' To ' || IN_To_Date ||' is ' || v_count || ' times.');
-     DBMS_OUTPUT.PUT_LINE(chr(13));
+    DBMS_OUTPUT.PUT_LINE('The total cancel orders is ' || v_count || ' times.');
+    DBMS_OUTPUT.PUT_LINE(chr(13));
     DBMS_OUTPUT.PUT_LINE(chr(13)|| LPAD(' ',48,' ') ||'-END of REPORT-');
 
 EXCEPTION
@@ -138,6 +131,6 @@ EXCEPTION
 END;
 /
 
-exec report_operation(TO_DATE('01/07/2017', 'DD/MM/YYYY'), TO_DATE('07/07/2017', 'DD/MM/YYYY'));
+exec report_operation(TO_DATE('01/02/2017', 'DD/MM/YYYY'), TO_DATE('15/02/2017', 'DD/MM/YYYY'));
 
 

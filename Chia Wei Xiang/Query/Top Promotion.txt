@@ -6,20 +6,21 @@ set pagesize 120
 set serveroutput on
 
 ACCEPT v_Month   DATE   FORMAT 'MM/YYYY'   PROMPT 'Enter value month/year format(MM/YYYY): '
+ACCEPT v_row CHAR PROMPT 'Enter how many reocrd to show: '
 
 COLUMN PromoId format 9999 heading 'PromoId'
 COLUMN promoDesc format a60 heading 'promoDesc'
-COLUMN discountRate format 9.99 heading 'Rate'
+COLUMN rate format 99 heading 'Rate(%)'
 COLUMN USEDTIME format 9999 heading 'Used Time'
-COLUMN VALUEEARN format 9999.99 heading 'Total Price'
+COLUMN VALUEEARN format 9999.99 heading 'Order Value'
 COLUMN AFTERDIS format 9999.99 heading 'After Discount'
 
-TTITLE CENTER 'Top 10 Promotion' SKIP 1 -
+TTITLE CENTER 'Top &v_row Promotion' SKIP 1 -
 CENTER 'OF MONTH &v_Month' SKIP 1 -
 CENTER =========================================================================  SKIP 1 -
 RIGHT 'Page: ' FORMAT 999 SQL.PNO SKIP 2 -
 
-SELECT p.PromoId, p.promoDesc, p.discountRate, 
+SELECT p.PromoId, p.promoDesc, p.discountRate*100 AS rate, 
 COUNT(o.orderId) as USEDTIME, SUM(o.subtotal) AS VALUEEARN, 
 SUM(o.subtotal*(1-p.discountRate)) AS AFTERDIS 
 FROM orders o, promotion p
@@ -27,11 +28,11 @@ WHERE o.promoId = p.promoId AND
        to_char(o.orderDate, 'MM/YYYY') = '&v_Month'
 GROUP BY p.PromoId, p.promoDesc, p.discountRate
 ORDER By USEDTIME DESC
-FETCH next 10 row only;
+FETCH next &v_row row only;
 
 COLUMN PromoId CLEAR
 COLUMN promoDesc CLEAR
-COLUMN discountRate CLEAR
+COLUMN rate CLEAR
 COLUMN USEDTIME CLEAR
 COLUMN VALUEEARN CLEAR
 COLUMN AFTERDIS CLEAR

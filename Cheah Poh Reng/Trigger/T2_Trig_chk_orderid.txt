@@ -1,29 +1,29 @@
 ALTER SESSION SET NLS_DATE_FORMAT='DD/MM/YYYY HH24:MI';
 
+
+
 CREATE OR REPLACE TRIGGER TRG_CHK_ORDERID
 BEFORE INSERT ON reviews
 FOR EACH ROW
 DECLARE
    v_Id reviews.reviewId%TYPE;
+   v_length comments.comment_length%TYPE;
    e_orderUnavailable  exception;
+   e_commentSizeOver   exception;
 
 BEGIN
-   SELECT reviewId
-   INTO   v_Id
-   FROM   reviews
-   WHERE (orderId = :new.orderId);
+   SELECT
+	LENGTH(comment_length) 
+   INTO v_length 
+   FROM comments;
 
-
-   IF SQL%FOUND THEN
-         raise e_orderUnavailable;
-   END IF;
-
+   IF v_length > 200 THEN
+        raise e_commentSizeOver;
+   END IF;      
+   
 EXCEPTION
-   WHEN NO_DATA_FOUND THEN
-        NULL;
-
-   WHEN e_orderUnavailable THEN
-        raise_application_error(-20001, 'INSERT FAILED: ORDER COMPLETED MADE REVIEW!');
+   WHEN e_commentSizeOver THEN
+        raise_application_error(-20022, 'INSERT FAILED!!Comment Cannot Exist 200 Words.');
 
     
 

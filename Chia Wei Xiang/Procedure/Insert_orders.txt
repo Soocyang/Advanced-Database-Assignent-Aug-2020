@@ -1,9 +1,15 @@
 -- input orders details, orders, Check Promo Code/ Expiry date, 
 -- check customer with payment method of credits need verify,
 -- Sum automatically the subtotal with the delivery fees,
-CREATE OR REPLACE PROCEDURE insert_orders(IN_CUSTOMERID IN NUMBER, IN_PROMOID IN NUMBER, IN_RIDERID IN NUMBER, 
-                    IN_PAYMENTMETHOD IN VARCHAR, IN_DELIVERYFEES IN NUMBER, IN_ORDERDATE IN VARCHAR,
-                    IN_STATUS IN VARCHAR, IN_ESTIMATEDTIME IN VARCHAR, IN_RECEIVEDTIME IN VARCHAR) IS
+CREATE OR REPLACE PROCEDURE insert_orders(IN_CUSTOMERID IN NUMBER, 
+                                        IN_PROMOID IN NUMBER, 
+                                        IN_RIDERID IN NUMBER, 
+                                        IN_PAYMENTMETHOD IN VARCHAR, 
+                                        IN_DELIVERYFEES IN NUMBER, 
+                                        IN_ORDERDATE IN VARCHAR,
+                                        IN_STATUS IN VARCHAR, 
+                                        IN_ESTIMATEDTIME IN VARCHAR, 
+                                        IN_RECEIVEDTIME IN VARCHAR) IS
    
     temp_count number(6); 
     subtotal number(6);
@@ -12,14 +18,17 @@ CREATE OR REPLACE PROCEDURE insert_orders(IN_CUSTOMERID IN NUMBER, IN_PROMOID IN
     v_expiryDate promotion.expiryDate%TYPE;
     v_riderId riders.riderId%TYPE;
 
+    v_promo_flag numeric;
+
     order_date DATE;
     estimated_time DATE;
     received_time DATE;
 
     PAYMENTMETHOD_NOT_ALLOWED EXCEPTION;
-    PROMOCODE_NOT_ALLOWED EXCEPTION;
 
 BEGIN
+    v_promo_flag := 0;
+
     SELECT MAX(orderID) INTO temp_count
    	FROM orders;
     temp_count := temp_count +1;
@@ -40,10 +49,6 @@ BEGIN
     estimated_time := TO_DATE(IN_ESTIMATEDTIME, 'DD/MM/YYYY HH24:MI:SS');
     received_time := TO_DATE(IN_RECEIVEDTIME, 'DD/MM/YYYY HH24:MI:SS');
 
-    IF order_date > v_expiryDate THEN
-        RAISE PROMOCODE_NOT_ALLOWED;
-    END IF;
-
     DBMS_OUTPUT.PUT_LINE (chr(10));
     DBMS_OUTPUT.PUT_LINE ('Order Details ');    
     DBMS_OUTPUT.PUT_LINE ('================================');    
@@ -58,8 +63,19 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE ('Estimated Time : ' || IN_ESTIMATEDTIME); 
     DBMS_OUTPUT.PUT_LINE ('Recieved Time : ' || IN_RECEIVEDTIME); 
 
-    insert into orders values(temp_count, IN_CUSTOMERID, IN_PROMOID, IN_RIDERID, IN_DELIVERYFEES,
-    IN_PAYMENTMETHOD, IN_DELIVERYFEES, order_date, IN_STATUS, estimated_time, received_time);
+    IF order_date > v_expiryDate THEN
+        DBMS_OUTPUT.PUT_LINE (chr(10));
+        DBMS_OUTPUT.PUT_LINE ('This Promotion ID is expired, cannot be used.');    
+        v_promo_flag := 1;
+    END IF;
+
+    IF v_promo_flag = 0 THEN
+        insert into orders values(temp_count, IN_CUSTOMERID, IN_PROMOID, IN_RIDERID, IN_DELIVERYFEES,
+        IN_PAYMENTMETHOD, IN_DELIVERYFEES, order_date, IN_STATUS, estimated_time, received_time);
+    ELSE 
+        insert into orders values(temp_count, IN_CUSTOMERID, NULL, IN_RIDERID, IN_DELIVERYFEES,
+        IN_PAYMENTMETHOD, IN_DELIVERYFEES, order_date, IN_STATUS, estimated_time, received_time);
+    END IF;
 
     DBMS_OUTPUT.PUT_LINE (chr(10));
     DBMS_OUTPUT.PUT_LINE ('Order has been successfuly added: ');
@@ -69,13 +85,9 @@ BEGIN
             raise_application_error (-20011,'This payment method is not allowed.');
         WHEN NO_DATA_FOUND THEN
             raise_application_error (-20012,'This Customer/Rider/Promo ID doesnt exist');
-        WHEN PROMOCODE_NOT_ALLOWED THEN
-            raise_application_error (-20013,'This Promotion ID is expired');
         WHEN OTHERS THEN
             IF SQLCODE = -2291 THEN
-                raise_application_error (-20014,'This Customer/Rider/Promo ID doesnt exist');
-            ELSE
-                raise_application_error (-20015,'An error has occurred when inserting the order. Please contact administrator');
+                raise_application_error (-20013,'This Customer/Rider/Promo ID doesnt exist');
             END IF;
 
 END;

@@ -82,13 +82,11 @@ BEGIN
 
     EXCEPTION
         WHEN RESTAURANT_NOT_ALLOWED THEN
-            raise_application_error (-20016,'Only allow to add menu that same with previous restaurant.');
+            raise_application_error (-20014,'Only allow to add menu that same with previous restaurant.');
         WHEN DUP_VAL_ON_INDEX THEN
-            raise_application_error (-20017,'You have tried to insert a same menu id.');
+            raise_application_error (-20015,'You have tried to insert a same menu id.');
         WHEN NO_DATA_FOUND THEN
-            raise_application_error (-20018,'No records found for the order id.');
-        WHEN OTHERS THEN
-            raise_application_error (-20020,'An error has occurred when inserting the order detail. Please contact administrator');
+            raise_application_error (-20016,'No records found for the order/menu id.');
         END;
 /
 

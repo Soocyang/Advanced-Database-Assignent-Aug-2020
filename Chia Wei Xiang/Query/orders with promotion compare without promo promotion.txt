@@ -1,9 +1,11 @@
 -- orders with promotion compare without promo promotion
 -- month | order with promocode |  order without promocode |
 
+COLUMN month format a10 heading 'Month'
+COLUMN TOTAL_ORDERS format 999999 heading 'Orders with promotion '
 COLUMN Promo_sales format 99999999.99 heading 'Sales with promotion'
+COLUMN TOTAL_WITHOUT_ORDERS format 999999 heading 'Orders Without promotion'
 COLUMN WITHOUT_PROMO format 99999999.99 heading 'Sales Without promotion'
-COLUMN percentage format 99999999.99 heading 'Diffent Percentage'
 ACCEPT v_year CHAR PROMPT 'Enter the year: '
 
 TTITLE CENTER 'Sales of promotion compare with without promotion' SKIP 1 -
@@ -16,7 +18,7 @@ DROP VIEW v_promo_sales1;
 CREATE VIEW v_promo_sales1 AS (
         SELECT EXTRACT(YEAR FROM orderDate) year,
                 TO_CHAR(TO_DATE(EXTRACT(MONTH FROM orderDate),'mm'), 'MONTH') month,
-                SUM(subtotal) AS TOTAL_SALES
+                COUNT(orderId) AS TOTAL_ORDERS, SUM(subtotal) AS TOTAL_SALES
         FROM orders 
         WHERE promoId IS NOT NULL
         GROUP BY EXTRACT(YEAR FROM orderDate), EXTRACT(MONTH FROM orderDate)
@@ -26,13 +28,14 @@ DROP VIEW v_promo_sales2;
 CREATE VIEW v_promo_sales2 AS (
         SELECT EXTRACT(YEAR FROM orderDate) year, 
                 TO_CHAR(TO_DATE(EXTRACT(MONTH FROM orderDate),'mm'), 'MONTH') month,
-                SUM(subtotal) AS TOTAL_SALES
+                COUNT(orderId) AS TOTAL_WITHOUT_ORDERS, SUM(subtotal) AS TOTAL_SALES
         FROM orders 
         WHERE promoId IS NULL
         GROUP BY EXTRACT(YEAR FROM orderDate), EXTRACT(MONTH FROM orderDate)
 );
 
-SELECT v1.month, v1.TOTAL_SALES AS Promo_sales, v2.TOTAL_SALES AS WITHOUT_PROMO 
+SELECT v1.month, v1.TOTAL_ORDERS, v1.TOTAL_SALES AS Promo_sales, 
+        v2.TOTAL_WITHOUT_ORDERS, v2.TOTAL_SALES AS WITHOUT_PROMO 
 FROM v_promo_sales1 v1, v_promo_sales2 v2
 WHERE v1.month = v2.month AND
         v1.year = v2.year AND

@@ -1,0 +1,109 @@
+cl scr
+
+
+
+CREATE OR REPLACE PROCEDURE orderRatingReport(IN_year IN number) IS
+
+v_pageCount NUMBER := 1;
+v_loop NUMBER := 0;
+v_ranking NUMBER := 0;
+v_temp_name VARCHAR(200);
+v_temp_order VARCHAR(200);
+v_times number(5);
+v_price number(5);
+v_best_sales number(11);
+V_1 varchar(200);
+V_2 varchar(200);
+V_4 number(11);
+CURSOR ORDER_CURSOR IS
+    Select r.restaurantName AS Restaurant_Name,
+	   m.menuName AS TOP_20_ORDER,
+	   sum(m.price) AS price,
+	   COUNT(od.MenuId) AS Ordered_Times
+    From   Restaurant r, Menu m, orderDetails od, orders o
+    Where  r.restaurantId = m.restaurantId AND
+	   m.menuId = od.menuId AND
+           od.orderId = o.orderId AND	  
+	   EXTRACT(YEAR FROM o.orderDate) = IN_year
+    Group by r.restaurantName, m.menuName
+    ORDER BY Ordered_Times DESC
+    FETCH FIRST 20 ROW ONLY;
+
+order_rec ORDER_CURSOR%ROWTYPE;
+
+
+BEGIN
+DBMS_OUTPUT.PUT_LINE(CHR(10));
+    DBMS_OUTPUT.PUT_LINE('             '||LPAD(' ',23,' ')||' Top 20 Order In ' || IN_year);
+    DBMS_OUTPUT.PUT_LINE('             '||LPAD(' ',23,' ')||LPAD('=',22,'='));
+          
+
+    OPEN ORDER_CURSOR;
+    LOOP
+    FETCH ORDER_CURSOR INTO order_rec;
+    EXIT WHEN ORDER_CURSOR%NOTFOUND;
+
+        IF(v_loop = 0 OR v_loop = 20) THEN
+            DBMS_OUTPUT.PUT_LINE(CHR(10));
+            DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: ', 14, ' ')||
+                                 RPAD(TO_CHAR(sysdate,'dd/mm/yyyy'), 10, ' ')||
+                                 RPAD(' ', 60, ' ')||
+                                 'Page: '||LPAD(v_pageCount, 1, ' '));
+            DBMS_OUTPUT.PUT_LINE(CHR(10));
+            DBMS_OUTPUT.PUT_LINE('Ranking  '||'Restaurant Name  '||'                         Menu Name'||'                         Sales');
+            DBMS_OUTPUT.PUT_LINE('========'||
+	 		    	 ' ========================================'||'  ======================='||'  ================');   
+            v_loop := 0;
+            v_pageCount := v_pageCount + 1;
+        END IF;
+
+	v_ranking := v_ranking + 1;
+	if(v_ranking = 1) THEN
+	 	v_temp_name := order_rec.Restaurant_Name;
+	        v_temp_order := order_rec.TOP_20_ORDER;
+		v_price := order_rec.price;
+	End if;
+
+        DBMS_OUTPUT.PUT_LINE(LPAD(v_ranking,7,' ')||
+			     LPAD(' ',2,' ')||
+			     RPAD(order_rec.Restaurant_Name,42,' ')||
+                             RPAD(order_rec.TOP_20_ORDER,20, ' ')||
+	 		     LPAD(TO_CHAR(order_rec.price,'$999,999.99'),20,' '));
+	 v_loop := v_loop + 1;
+    END LOOP;
+
+
+   DBMS_OUTPUT.PUT_LINE('==============================================================================================');
+
+    Select COUNT(od.MenuId) 
+    INTO v_Times
+    From  Restaurant r, Menu m, orderDetails od, orders o
+    Where r.restaurantName = v_temp_name AND
+	  r.restaurantId = m.restaurantId AND
+	  m.menuId = od.menuId AND
+          od.orderId = o.orderId AND
+	  m.menuName = v_temp_order AND	  
+	  EXTRACT(YEAR FROM o.orderDate) = IN_year;
+
+    DBMS_OUTPUT.PUT_LINE('=================================================='||
+			 '============================================
+			');
+    DBMS_OUTPUT.PUT_LINE('====================================== S U M M A R Y '||
+			 '=========================================');
+    DBMS_OUTPUT.PUT_LINE(''||'     	  
+		    '||'	   Restaurant '||v_temp_name||' in '||IN_year||'');
+    DBMS_OUTPUT.PUT_LINE(''||'
+		'||'   	 	 TOP ORDER: '||v_temp_order||'');
+    DBMS_OUTPUT.PUT_LINE(''||'	
+		'||'  	   ORDERED FOR : '||'  '|| v_times ||' time(s)	');
+    DBMS_OUTPUT.PUT_LINE(''||'		      '||'     SALES       :'||TO_CHAR(v_price,'$9,999.99')||'');
+    DBMS_OUTPUT.PUT_LINE('                         '
+			||'');
+    DBMS_OUTPUT.PUT_LINE('==========================================================='||
+			 '===================================');
+
+
+END;
+/
+
+exec orderRatingReport(2018);

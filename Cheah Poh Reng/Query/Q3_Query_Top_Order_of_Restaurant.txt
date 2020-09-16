@@ -1,0 +1,40 @@
+cl scr
+ALTER SESSION SET NLS_DATE_FORMAT = 'DD/MM/YYYY HH24:MI';
+ 
+set linesize 150
+set pagesize 100 
+
+Select restaurantId,
+       restaurantName
+from restaurant;
+
+
+
+
+
+ACCEPT input_res CHAR PROMPT 'INPUT Restaurant ID:'
+ACCEPT input_year CHAR PROMPT 'INPUT Year:'
+ACCEPT input_rank CHAR PROMPT 'TOP ? RANKING:'
+cl scr
+COLUMN PROFIT FORMAT $999,999.99 HEADING "PROFIT"
+
+SELECT * 
+FROM(
+      Select m.menuName AS TOP_ORDER,
+	     COUNT(od.MenuId) AS Ordered_Times,
+	     SUM(O.SUBTOTAL) AS PROFIT
+      From   Restaurant r, Menu m, orderDetails od, orders o
+      Where  r.restaurantId = &input_res AND
+	     r.restaurantId = m.restaurantId AND
+	     m.menuId = od.menuId AND
+             od.orderId = o.orderId AND	  
+	     EXTRACT(YEAR FROM o.orderDate) = &input_year 
+      GROUP BY m.menuName, od.MenuID
+      ORDER BY Ordered_Times DESC, PROFIT DESC
+)WHERE ROWNUM <= &INPUT_RANK;
+
+
+
+
+
+
